@@ -135,7 +135,7 @@
     <script src="https://unpkg.com/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     
     <script>
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyQ8U0lTsGTb7LcSdS4iCbwUxcykxe21fJPzhFdH3iKEQqC3q1AVP-4VKfuJV6_uI5ckA/exec'; 
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyQ8U0lTsGTb7LcSdS4iCbwUxcykxe21fJPzhFdH3iKEQqC3q1AVP-4VKfuJV6_uI5ckA/exec'; 
 
         let currentUser = null;
         let mapData = {};
@@ -184,7 +184,7 @@
                 .then(json => {
                     if(json.status === 'success') {
                         mapData = json.data;
-                        setTimeout(initMapSystem, 100);
+                        setTimeout(initMapSystem, 200); // 描画待ち
                     }
                 });
         }
@@ -193,39 +193,70 @@
             const svgElement = document.querySelector('#map-wrapper svg');
             if (!svgElement) return;
 
+            // MapChartのSVGは viewBox が重要。スタイルを固定。
+            svgElement.style.width = '100%';
+            svgElement.style.height = '100%';
             if (!svgElement.id) svgElement.id = 'main-map-svg';
 
-            // 1. パン・ズーム（スマホ対応設定）
-            panZoomInstance = svgPanZoom('#' + svgElement.id, {
-                zoomEnabled: true,
-                controlIconsEnabled: false,
-                fit: true,
-                center: true,
-                minZoom: 0.1,
-                maxZoom: 20,
-                mouseWheelZoomEnabled: true,
-                preventMouseEventsDefault: true // スマホのスクロール干渉防止
-            });
+            // 1. パン・ズーム（スマホ対応設定を強化）
+            try {
+                panZoomInstance = svgPanZoom('#' + svgElement.id, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: false,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.1,
+                    maxZoom: 30,
+                    mouseWheelZoomEnabled: true,
+                    // スマホのピンチズームを有効化するための必須設定
+                    dblClickZoomEnabled: true,
+                    preventMouseEventsDefault: false 
+                });
+            } catch (e) { console.error("Zoom Error:", e); }
 
             // 2. 色塗り（エラー回避型）
+            renderMapColor(svgElement);
+
+            // 3. クリック/タップイベント（スマホ対応版）
+            // バブリングを利用して、svg全体のクリックを検知
+            const handleInteract = (e) => {
+                // クリックされた要素から一番近い 'path' を探す
+                const targetPath = e.target.closest('path, circle, rect, polygon');
+                if (targetPath) {
+                    const id = targetPath.id;
+                    if (id) {
+                        showInfo(id);
+                        // タップした要素を強調（任意）
+                        targetPath.style.stroke = "#fff";
+                        targetPath.style.strokeWidth = "2px";
+                        setTimeout(() => { targetPath.style.strokeWidth = "0.25px"; }, 1000);
+                    }
+                }
+            };
+
+            // PC用
+            svgElement.addEventListener('click', handleInteract);
+            // スマホ用（touchendだと移動中に反応してしまうため、簡易的なタップ判定が必要な場合もありますが、まずはclickで試します）
+            // ブラウザによってはSVG上のclickがスマホで反応しにくいため pointerup を使用
+            svgElement.addEventListener('pointerup', (e) => {
+                // ドラッグ中（移動中）はクリックとみなさない判定
+                if (e.pointerType === 'touch') {
+                    handleInteract(e);
+                }
+            });
+        }
+
+        function renderMapColor(svgElement) {
             for (const [id, data] of Object.entries(mapData)) {
                 if (!id || id.trim() === '') continue;
                 try {
-                    const target = svgElement.querySelector('#' + CSS.escape(id));
+                    const escapedId = CSS.escape(id);
+                    const target = svgElement.querySelector('#' + escapedId);
                     if (target) {
                         target.style.fill = data.Color || '#333';
-                        target.style.transition = 'fill 0.5s';
                     }
                 } catch (e) {}
             }
-
-            // 3. クリックイベント
-            svgElement.addEventListener('click', (e) => {
-                const targetPath = e.target.closest('path, circle, rect, polygon');
-                if (targetPath && targetPath.id) {
-                    showInfo(targetPath.id);
-                }
-            });
         }
 
         function showInfo(id) {
@@ -239,7 +270,7 @@
                 html += `</table>`;
                 infoBox.innerHTML = html;
             } else {
-                infoBox.innerHTML = `<p>エリアID: ${id}<br>詳細データなし</p>`;
+                infoBox.innerHTML = `<p>エリアID: ${id}<br>詳細データなし（スプレッドシートのIDを確認してください）</p>`;
             }
         }
     </script>
