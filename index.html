@@ -120,10 +120,7 @@
     <script src="https://unpkg.com/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     
     <script>
-        // ▼▼▼ 設定エリア ▼▼▼
-        // 先ほど作成したGASのURLを入れてください
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyQ8U0lTsGTb7LcSdS4iCbwUxcykxe21fJPzhFdH3iKEQqC3q1AVP-4VKfuJV6_uI5ckA/exec'; 
-        // ▲▲▲ 設定エリア ▲▲▲
 
         let currentUser = null;
         let mapData = {};
@@ -250,21 +247,30 @@
             });
         }
 
-        // --- 色塗り ---
+// --- 色塗り（エラー対策版） ---
         function renderMapColor(svgElement) {
             for (const [id, data] of Object.entries(mapData)) {
-                // SVG内の該当IDを持つ要素を探す
-                const element = svgElement.querySelector('#' + id);
-                // IDが数字始まりなどでquerySelectorが失敗する場合の対策
-                // (MapChartは大丈夫ですが念のため getElementById も試す)
-                const target = element || document.getElementById(id);
+                // 1. IDが空っぽ、または変な記号だけの場合はスキップ
+                if (!id || id.trim() === '') continue;
 
-                if (target) {
-                    if(data.Color) {
-                        target.style.fill = data.Color;
-                    } else {
-                        target.style.fill = '#cccccc'; // デフォルト色
+                try {
+                    // 2. IDに記号が含まれていても大丈夫なようにエスケープ処理をする
+                    // (例: "JP-01" はそのままだが、変な記号は無害化される)
+                    const escapedId = CSS.escape(id);
+                    
+                    // SVG内の要素を探す
+                    const element = svgElement.querySelector('#' + escapedId);
+
+                    if (element) {
+                        if(data.Color) {
+                            element.style.fill = data.Color;
+                        } else {
+                            element.style.fill = '#cccccc'; // デフォルト色
+                        }
                     }
+                } catch (e) {
+                    // もし検索に失敗してもエラーで止まらず、ログだけ出して次へ進む
+                    console.warn('スキップされた不正なID:', id, e);
                 }
             }
         }
