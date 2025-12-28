@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国家運営処理システム・ステッラ</title>
     <style>
-        /* 全体のスタイル設定（ダークモード） */
+        /* --- 全体のスタイル設定（ダークモード） --- */
         body {
             margin: 0;
             padding: 0;
@@ -16,8 +16,8 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-color: #111; /* 画像読み込み前用 */
-            color: #e0e0e0; /* 文字色を白系に */
+            background-color: #111;
+            color: #e0e0e0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -25,64 +25,79 @@
 
         /* 暗めのオーバーレイ */
         .overlay {
-            background-color: rgba(0, 0, 0, 0.75); /* 黒く透過 */
+            background-color: rgba(0, 0, 0, 0.75);
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
+            overflow-x: hidden; /* 横スクロール防止 */
         }
 
-        /* ヘッダー周り */
+        /* --- ヘッダー --- */
         header {
             width: 100%;
-            padding: 30px 0;
+            padding: 20px 0;
             display: flex;
+            flex-direction: column; /* スマホ向けに縦並びも許容 */
             align-items: center;
             justify-content: center;
             border-bottom: 1px solid #444;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-            margin-bottom: 40px;
-        }
-
-        .logo-img {
-            height: 60px;
-            margin-right: 20px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); /* ロゴを少し光らせる */
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin: 0;
-            letter-spacing: 0.15em;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-
-        /* メインコンテンツ（ボタン群） */
-        .main-content {
-            display: none; /* ログインするまで隠す */
-            width: 80%;
-            max-width: 900px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.5));
+            margin-bottom: 30px;
             text-align: center;
         }
 
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap; /* 狭い画面で折り返し */
+        }
+
+        .logo-img {
+            height: 50px; /* スマホ向けに少し小さく */
+            margin-right: 15px;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+        }
+
+        h1 {
+            font-size: 1.5rem; /* スマホ初期値 */
+            margin: 0;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            line-height: 1.4;
+        }
+
+        /* --- メインコンテンツ --- */
+        .main-content {
+            display: none;
+            width: 90%; /* スマホ向けに幅を広げる */
+            max-width: 900px;
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
         .country-welcome {
-            font-size: 1.6rem;
-            margin-bottom: 40px;
+            font-size: 1.4rem;
+            margin-bottom: 30px;
             font-weight: bold;
             text-shadow: 0 0 5px #000;
+            word-break: break-all; /* 長い国名対策 */
         }
 
         .button-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
-            padding: 20px;
+            /* スマホでは1列、画面が広ければ自動で列を増やす */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 15px;
+            padding: 10px;
         }
 
-        /* ボタンのデザイン（ダークモード仕様） */
+        /* --- ボタンのデザイン --- */
+        /* buttonタグとaタグ両方に対応 */
         .system-btn {
-            background-color: rgba(30, 40, 50, 0.8);
+            background-color: rgba(30, 40, 50, 0.85);
             color: #fff;
             padding: 20px;
             border: 1px solid #555;
@@ -90,19 +105,23 @@
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
-            text-decoration: none;
-            display: block;
+            text-decoration: none; /* リンクの下線を消す */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            border-radius: 2px;
+            min-height: 60px; /* タップしやすい高さ */
         }
 
-        .system-btn:hover {
+        .system-btn:hover, .system-btn:active {
             background-color: #3a506b;
             border-color: #888;
             letter-spacing: 1px;
             box-shadow: 0 0 15px rgba(58, 80, 107, 0.6);
         }
 
-        /* フッター */
+        /* --- フッター --- */
         footer {
             margin-top: auto;
             width: 100%;
@@ -114,44 +133,38 @@
 
         .footer-text {
             color: #888;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             margin: 0;
         }
 
-        /* ログインモーダル */
+        /* --- ログインモーダル --- */
         #login-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000; /* 完全な黒背景 */
+            background-color: #050505;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             color: white;
             transition: opacity 1s ease;
+            padding: 20px; /* スマホでの端の余白 */
+            box-sizing: border-box;
         }
 
         .login-box {
             background-color: #1a1a1a;
             color: #e0e0e0;
-            padding: 50px;
+            padding: 30px 20px;
             border: 1px solid #444;
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
             text-align: center;
-            width: 320px;
+            width: 100%;
+            max-width: 350px; /* PCでは広がりすぎないように */
             position: relative;
-        }
-
-        /* 装飾的な枠線 */
-        .login-box::before {
-            content: "";
-            position: absolute;
-            top: 5px; left: 5px; right: 5px; bottom: 5px;
-            border: 1px solid #333;
-            pointer-events: none;
         }
 
         .login-box h2 {
@@ -160,28 +173,26 @@
             border-bottom: 1px solid #333;
             padding-bottom: 15px;
             margin-bottom: 25px;
+            font-size: 1.4rem;
         }
 
-        /* 入力フォームのスタイル */
         .login-input, .login-select {
             width: 100%;
-            padding: 12px;
+            padding: 15px; /* スマホでタップしやすく */
             margin: 10px 0;
             font-family: inherit;
             box-sizing: border-box;
             background-color: #000;
             border: 1px solid #444;
             color: #fff;
-            font-size: 1rem;
-        }
-
-        .login-select {
-            cursor: pointer;
+            font-size: 16px; /* iOSでのズーム防止 */
+            border-radius: 4px;
         }
 
         .login-btn {
             margin-top: 25px;
-            padding: 12px 40px;
+            padding: 15px 0;
+            width: 100%;
             background-color: #333;
             color: #fff;
             border: 1px solid #555;
@@ -189,6 +200,7 @@
             font-size: 1rem;
             cursor: pointer;
             transition: 0.3s;
+            border-radius: 4px;
         }
 
         .login-btn:hover {
@@ -199,14 +211,13 @@
         .login-btn:disabled {
             background-color: #222;
             color: #555;
-            cursor: not-allowed;
-            border-color: #333;
         }
 
-        #loading-msg {
-            font-size: 0.8rem;
-            color: #888;
-            margin-top: 10px;
+        /* --- PC向け調整 (画面幅600px以上) --- */
+        @media (min-width: 600px) {
+            h1 { font-size: 2rem; }
+            .logo-img { height: 60px; }
+            .login-box { padding: 50px; }
         }
     </style>
 </head>
@@ -227,14 +238,16 @@
             <button id="btn-login" class="login-btn" onclick="attemptLogin()" disabled>接続待機中...</button>
             
             <p id="login-status" style="color: #ff6b6b; font-size: 0.9em; margin-top: 15px; min-height: 1.2em;"></p>
-            <p id="loading-msg">サーバー通信中...</p>
+            <p id="loading-msg" style="font-size: 0.8rem; color: #888; margin-top: 10px;">サーバー通信中...</p>
         </div>
     </div>
 
     <div class="overlay">
         <header>
-            <img src="stella.png" alt="Stella Logo" class="logo-img">
-            <h1>国家運営処理システム・ステッラ</h1>
+            <div class="header-content">
+                <img src="stella.png" alt="Stella Logo" class="logo-img">
+                <h1>国家運営処理システム<br class="sp-only" style="display:none;">・ステッラ</h1>
+            </div>
         </header>
 
         <div class="main-content" id="main-content">
@@ -244,7 +257,9 @@
 
             <div class="button-grid">
                 <button class="system-btn">メールボックス</button>
-                <button class="system-btn">ステート政策</button>
+                
+                <a href="index.html" class="system-btn">ステート政策</a>
+                
                 <button class="system-btn">政策</button>
                 <button class="system-btn">貿易ターミナルへ</button>
                 <button class="system-btn">情報を見る</button>
@@ -261,23 +276,21 @@
     <script>
         // スプレッドシート情報
         const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU';
-        const SHEET_NAME = 'CountryData'; // シート名は正確に
+        const SHEET_NAME = 'CountryData'; 
 
         // データ格納用
         let countryData = {}; // { "国名": "パスワード" }
 
-        // ページ読み込み時に実行
         window.onload = async function() {
             try {
                 // スプレッドシートをCSV形式で取得
-                // GoogleのVisualization APIを利用 (GAS不要)
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
                 
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("データ取得失敗");
                 
                 const text = await response.text();
-                parseCSVAndInit(text);
+                parseCSVVertical(text);
                 
                 // 準備完了
                 const btn = document.getElementById('btn-login');
@@ -287,42 +300,39 @@
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('login-status').innerText = "通信エラー: データベースに接続できません。";
+                document.getElementById('login-status').innerText = "システムエラー: 通信に失敗しました。";
                 document.getElementById('loading-msg').innerText = "接続失敗";
             }
         };
 
-        // CSVを解析してプルダウンを作る関数
-        function parseCSVAndInit(csvText) {
+        // 【変更点】CSVを縦方向に解析する関数（1列目=国名, 2列目=パスワード）
+        function parseCSVVertical(csvText) {
+            // 行ごとに分割
             const rows = csvText.split(/\r?\n/);
-            if (rows.length < 2) return;
-
-            // 簡易CSVパース（引用符除去）
-            const parseRow = (row) => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
-
-            const countries = parseRow(rows[0]); // 1行目：国名
-            const passwords = parseRow(rows[1]); // 2行目：パスワード
-
             const selectBox = document.getElementById('input-country');
 
-            // データ保存＆プルダウン生成
-            for (let i = 0; i < countries.length; i++) {
-                const cName = countries[i];
-                const cPass = passwords[i];
+            // 1行ずつ処理 (データが多い場合はヘッダー行をスキップする処理が必要ですが、
+            // 今回はすべての行をデータとして扱うか、空行で判断します)
+            rows.forEach(row => {
+                // カンマ区切りでセルを分割し、前後の"を取り除く
+                const cells = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
 
-                if (cName) {
+                // セルが2つ以上あり、かつ1列目(国名)が空でない場合
+                if (cells.length >= 2 && cells[0] !== "") {
+                    const cName = cells[0]; // 1列目
+                    const cPass = cells[1]; // 2列目
+
                     countryData[cName] = cPass;
 
-                    // プルダウンに選択肢を追加
+                    // プルダウンに追加
                     const option = document.createElement('option');
                     option.value = cName;
                     option.textContent = cName;
                     selectBox.appendChild(option);
                 }
-            }
+            });
         }
 
-        // ログインボタン処理
         function attemptLogin() {
             const selectedCountry = document.getElementById('input-country').value;
             const inputPass = document.getElementById('input-password').value.trim();
@@ -333,10 +343,7 @@
                 return;
             }
 
-            // 照合処理
-            // スプレッドシートのパスワードと比較（簡易セキュリティ）
             if (countryData[selectedCountry] == inputPass) {
-                // 成功時：フェードアウト演出
                 const modal = document.getElementById('login-modal');
                 modal.style.opacity = '0';
                 
@@ -344,11 +351,10 @@
                     modal.style.display = 'none';
                     document.getElementById('main-content').style.display = 'block';
                     document.getElementById('welcome-message').innerText = `ようこそ、${selectedCountry} 指導者様`;
-                }, 1000); // 1秒かけて消える
-
+                }, 1000);
             } else {
                 statusMsg.innerText = "認証拒否: パスワードが一致しません。";
-                document.getElementById('input-password').value = ""; // パスワード欄をクリア
+                document.getElementById('input-password').value = "";
             }
         }
     </script>
