@@ -47,7 +47,12 @@
             flex-grow: 1; background: #0e0e0e; position: relative; overflow: hidden; 
             display: flex; justify-content: center; align-items: center;
         }
-        #map-wrapper svg { width: 100%; height: 100%; touch-action: none; }
+        #map-wrapper svg { 
+            width: 100%; 
+            height: 100%; 
+            touch-action: none;
+            background-color: #0e0e0e; /* ←これを追加（強制的に背景を黒にする） */
+        }
 
         /* 左側のズームボタン */
         .zoom-controls {
@@ -304,12 +309,28 @@
             }
         }
 
-        // ズーム初期化
+// システム初期化（背景修正機能を追加した改修版）
         function initMapSystem() {
             const svgElement = document.querySelector('#map-wrapper svg');
             if (!svgElement) return;
             if (!svgElement.id) svgElement.id = 'main-map-svg';
 
+            // 【追加修正】中途半端なサイズの背景用Rectがあれば削除または修正する
+            // MapChartやサンプルの残骸で、widthが固定値になっているRectを探す
+            const rects = svgElement.querySelectorAll('rect');
+            rects.forEach(rect => {
+                // widthやheightが指定されている、かつパス（地図の形）ではない要素
+                if (rect.getAttribute('width') && rect.getAttribute('height')) {
+                    // 背景色っぽい色、または白背景なら
+                    const fill = rect.getAttribute('fill') || rect.style.fill;
+                    if (fill === '#0e0e0e' || fill === 'white' || fill === '#ffffff') {
+                        // 削除してCSSの背景色(#0e0e0e)に任せる（これが一番きれいになります）
+                        rect.remove(); 
+                    }
+                }
+            });
+
+            // ズーム機能の起動
             if(!panZoomInstance) {
                 panZoomInstance = svgPanZoom('#' + svgElement.id, {
                     zoomEnabled: true, controlIconsEnabled: false,
@@ -317,6 +338,7 @@
                 });
             }
 
+            // クリック（タップ）イベントの設定
             svgElement.addEventListener('pointerdown', (e) => {
                 const target = e.target.closest('path, circle, rect, polygon');
                 if (target && target.id) {
@@ -324,7 +346,6 @@
                 }
             });
         }
-
         function manualZoom(scale) {
             if (!panZoomInstance) return;
             if (scale > 1) panZoomInstance.zoomBy(1.2); // 1.2倍ずつ
