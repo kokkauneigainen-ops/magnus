@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Territory Management System</title>
     <style>
-        /* --- 全体デザイン（ダークモード & 明朝体） --- */
+        /* --- 全体デザイン --- */
         body { 
             font-family: "Sawarabi Mincho", "Hiragino Mincho ProN", "MS PMincho", serif; 
             margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
@@ -27,7 +27,6 @@
             border: 1px solid #555; background: #3d3d3d; color: #fff; box-sizing: border-box;
         }
         .login-box button { background: #555; cursor: pointer; border: none; transition: 0.3s; }
-        .login-box button:hover { background: #777; }
         
         /* ヘッダー & ボタンバー */
         header { padding: 10px 20px; background: #000; color: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
@@ -39,11 +38,11 @@
             padding: 6px 12px; font-family: serif; background: #3d3d3d; color: #ddd; 
             border: 1px solid #555; border-radius: 4px; cursor: pointer; font-size: 14px;
         }
+        .button-bar button:hover, .button-bar button.active { background: #666; color: #fff; border-color: #888; }
 
         /* メインレイアウト */
         .container { display: flex; flex-grow: 1; overflow: hidden; flex-direction: column; position: relative; }
         
-        /* マップ表示エリア */
         #map-wrapper { 
             flex-grow: 1; background: #0e0e0e; position: relative; overflow: hidden; 
             display: flex; justify-content: center; align-items: center;
@@ -62,11 +61,10 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        /* 情報パネル（ここだけゴシック体） */
+        /* 情報パネル */
         #info-panel {
             height: 35%; min-height: 200px; background: #252525; border-top: 2px solid #444;
-            padding: 20px; overflow-y: auto; box-sizing: border-box;
-            font-family: sans-serif;
+            padding: 20px; overflow-y: auto; box-sizing: border-box; font-family: sans-serif;
         }
         #info-panel h3 { margin-top: 0; border-left: 4px solid #888; padding-left: 10px; font-family: serif; }
         
@@ -98,21 +96,23 @@
     </header>
 
     <div class="button-bar">
-        <button onclick="alert('内政機能：未実装')">内政報告</button>
-        <button onclick="alert('外交機能：未実装')">外交交渉</button>
-        <button onclick="alert('軍事機能：未実装')">軍事展開</button>
-        <button onclick="alert('国庫機能：未実装')">国庫確認</button>
-        <button onclick="alert('設定機能：未実装')">環境設定</button>
+        <button onclick="switchMode('policy')" id="btn-policy">経済政策</button>
+        <button onclick="switchMode('domestic')" id="btn-domestic">内政政策</button>
+        <button onclick="switchMode('industry')" id="btn-industry">産業開発</button>
+        <button onclick="switchMode('land')" id="btn-land">国土開発</button>
+        <button onclick="switchMode('transfer')" id="btn-transfer">領土譲渡</button>
     </div>
 
     <div class="container">
         <div id="map-wrapper">
             <div class="zoom-controls">
-                <button class="zoom-btn" onclick="manualZoom(15.0)">＋</button>
-                <button class="zoom-btn" onclick="manualZoom(0.01)">－</button>
+                <button class="zoom-btn" onclick="manualZoom(1.5)">＋</button>
+                <button class="zoom-btn" onclick="manualZoom(0.5)">－</button>
             </div>
             
-            <svg id="wrapper" viewBox="0 0 1400.16 600" preserveAspectRatio="xMinYMin" height="600" width="1400.16" style="background-color: rgb(255, 255, 255);"><metadata>
+            <svg id="main-map-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <rect width="800" height="600" fill="#0e0e0e"/>
+                <svg id="wrapper" viewBox="0 0 1400.16 600" preserveAspectRatio="xMinYMin" height="600" width="1400.16" style="background-color: rgb(255, 255, 255);"><metadata>
     <rdf:rdf xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
       <cc:work rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -139,7 +139,7 @@
             </div>
 
         <div id="info-panel">
-            <h3>エリア情報</h3>
+            <h3 id="panel-title">エリア情報</h3>
             <div id="area-details">
                 <p>地図上の領域を選択してください。</p>
             </div>
@@ -149,14 +149,15 @@
     <script src="https://unpkg.com/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     
     <script>
-        // --- 設定：GASのURLをここに貼り付け ---
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyQ8U0lTsGTb7LcSdS4iCbwUxcykxe21fJPzhFdH3iKEQqC3q1AVP-4VKfuJV6_uI5ckA/exec'; 
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyYSQce-D6VLDqY9Hv9CHrMu8R-TGKwreWLzaSC9e5V41f7xhnd12BNV4KtSe6pXFEVTw/exec'; 
 
         let currentUser = null;
-        let mapData = {};
+        let baseMapData = {};   // 通常のマップデータ
+        let policyData = {};    // 経済政策用データ
+        let currentMode = 'normal'; // 現在のモード
         let panZoomInstance = null;
 
-        // ログイン用データ取得
+        // 初期化
         document.addEventListener('DOMContentLoaded', () => {
             fetch(GAS_API_URL + '?op=getCountryList')
                 .then(res => res.json())
@@ -172,10 +173,10 @@
                         document.getElementById('login-form').style.display = 'block';
                     }
                 })
-                .catch(err => alert('GASとの通信に失敗しました。URLを確認してください。'));
+                .catch(err => alert('通信エラー: URLを確認してください'));
         });
 
-        // ログイン処理
+        // ログイン
         function tryLogin() {
             const country = document.getElementById('country-select').value;
             const password = document.getElementById('password-input').value;
@@ -188,95 +189,193 @@
                         currentUser = country;
                         document.getElementById('user-display').textContent = '所属: ' + currentUser;
                         document.getElementById('login-modal').style.display = 'none';
-                        loadMapData(); 
+                        loadBaseData(); 
                     } else {
-                        alert('秘密鍵が照合できません。');
+                        alert('認証失敗');
                     }
                 });
         }
 
-        // マップデータ取得
-        function loadMapData() {
+        // 通常データの読み込み
+        function loadBaseData() {
             fetch(GAS_API_URL + '?op=getMapData')
                 .then(res => res.json())
                 .then(json => {
                     if(json.status === 'success') {
-                        mapData = json.data;
-                        setTimeout(initMapSystem, 100);
+                        baseMapData = json.data;
+                        setTimeout(() => {
+                            initMapSystem();
+                            // 初期は通常モードで描画
+                            renderMapColor(baseMapData);
+                        }, 100);
                     }
                 });
         }
 
-        // ズーム操作
-        function manualZoom(scale) {
-            if (!panZoomInstance) return;
-            if (scale > 1) panZoomInstance.zoomIn();
-            else panZoomInstance.zoomOut();
+        // モード切替とボタン処理
+        function switchMode(mode) {
+            // ボタンの見た目リセット
+            document.querySelectorAll('.button-bar button').forEach(b => b.classList.remove('active'));
+
+            if (mode === 'policy') {
+                document.getElementById('btn-policy').classList.add('active');
+                currentMode = 'policy';
+                document.getElementById('panel-title').textContent = '経済政策レポート';
+                document.getElementById('area-details').innerHTML = '<p>データ取得中...</p>';
+                
+                // 経済データを取得して表示
+                fetch(`${GAS_API_URL}?op=getPolicyData&country=${encodeURIComponent(currentUser)}`)
+                    .then(res => res.json())
+                    .then(json => {
+                        if(json.status === 'success') {
+                            policyData = json.data;
+                            renderHeatmap(policyData);
+                            document.getElementById('area-details').innerHTML = '<p>経済指標モード：<br>D列の値により 赤(低) ⇔ 緑(高) で表示中。<br>自国領のみ表示されます。</p>';
+                        }
+                    });
+
+            } else {
+                // 他のボタン（未実装機能など）は通常モードに戻す例
+                document.getElementById('btn-' + mode).classList.add('active');
+                currentMode = 'normal';
+                document.getElementById('panel-title').textContent = 'エリア情報';
+                renderMapColor(baseMapData);
+                document.getElementById('area-details').innerHTML = `<p>${mode}機能は準備中です。<br>通常マップを表示します。</p>`;
+            }
         }
 
-        // システム初期化
+        // ヒートマップ描画（経済政策用）
+        function renderHeatmap(data) {
+            const svgElement = document.querySelector('#map-wrapper svg');
+            if(!svgElement) return;
+
+            // まず全エリアを暗くする（他国領を隠すため）
+            const allPaths = svgElement.querySelectorAll('path, circle, rect, polygon');
+            allPaths.forEach(p => {
+                p.style.fill = '#111'; // 背景に近い色
+                p.style.stroke = '#222';
+            });
+
+            // データの最大・最小値を探す（動的に色を決めるため）
+            let minVal = 999999, maxVal = -999999;
+            for(const key in data) {
+                const val = data[key]._Value;
+                if(val < minVal) minVal = val;
+                if(val > maxVal) maxVal = val;
+            }
+            // 差が0の場合の安全策
+            if(maxVal === minVal) maxVal = minVal + 1;
+
+            // データがあるエリア（自国領）だけ色を塗る
+            for (const [id, info] of Object.entries(data)) {
+                try {
+                    const target = document.getElementById(id) || svgElement.querySelector('#' + CSS.escape(id));
+                    if (target) {
+                        const val = info._Value;
+                        // 数値を 0.0(赤) 〜 1.0(緑) の比率に変換
+                        // 低い(赤) ... 0度 / 高い(緑) ... 120度
+                        const ratio = (val - minVal) / (maxVal - minVal);
+                        const hue = Math.floor(ratio * 120); // 0(赤)〜120(緑)
+                        
+                        target.style.fill = `hsl(${hue}, 70%, 40%)`; // 彩度70%, 輝度40%
+                        target.style.stroke = "#fff"; // 自国領は枠線を見せる
+                        target.style.strokeWidth = "0.5px";
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // 通常の色塗り
+        function renderMapColor(data) {
+            const svgElement = document.querySelector('#map-wrapper svg');
+            if(!svgElement) return;
+            
+            for (const [id, info] of Object.entries(data)) {
+                if (!id) continue;
+                try {
+                    const target = document.getElementById(id) || svgElement.querySelector('#' + CSS.escape(id));
+                    if (target) {
+                        target.style.fill = info.Color || '#333';
+                        target.style.stroke = "#000";
+                        target.style.strokeWidth = "0.2px";
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // ズーム初期化
         function initMapSystem() {
             const svgElement = document.querySelector('#map-wrapper svg');
             if (!svgElement) return;
             if (!svgElement.id) svgElement.id = 'main-map-svg';
 
-            // ズーム機能
-            panZoomInstance = svgPanZoom('#' + svgElement.id, {
-                zoomEnabled: true,
-                controlIconsEnabled: false,
-                fit: true,
-                center: true,
-                minZoom: 0.1,
-                maxZoom: 50,
-                dblClickZoomEnabled: false
-            });
+            if(!panZoomInstance) {
+                panZoomInstance = svgPanZoom('#' + svgElement.id, {
+                    zoomEnabled: true, controlIconsEnabled: false,
+                    fit: true, center: true, minZoom: 0.1, maxZoom: 50, dblClickZoomEnabled: false
+                });
+            }
 
-            // 色塗り
-            renderMapColor(svgElement);
-
-            // 選択イベント
             svgElement.addEventListener('pointerdown', (e) => {
                 const target = e.target.closest('path, circle, rect, polygon');
                 if (target && target.id) {
-                    // 全枠リセット
-                    const all = svgElement.querySelectorAll('path, circle, rect, polygon');
-                    all.forEach(p => { p.style.stroke = ""; p.style.strokeWidth = ""; });
-
-                    // 選択枠強調
-                    target.style.stroke = "#ffffff";
-                    target.style.strokeWidth = "2.5px";
-                    
                     showInfo(target.id);
                 }
             });
         }
 
-        function renderMapColor(svgElement) {
-            for (const [id, data] of Object.entries(mapData)) {
-                if (!id) continue;
-                try {
-                    const target = document.getElementById(id) || svgElement.querySelector('#' + CSS.escape(id));
-                    if (target) {
-                        target.style.fill = data.Color || '#333';
-                        target.style.stroke = "#000";
-                        target.style.strokeWidth = "0.2px";
-                    }
-                } catch (e) {}
-            }
+        function manualZoom(scale) {
+            if (!panZoomInstance) return;
+            if (scale > 1) panZoomInstance.zoomBy(1.2); // 1.2倍ずつ
+            else panZoomInstance.zoomBy(0.8); // 0.8倍ずつ
         }
 
+        // 情報表示
         function showInfo(id) {
-            const data = mapData[id];
             const infoBox = document.getElementById('area-details');
-            if (data) {
+            
+            // 現在のモードによって表示するデータを変える
+            let targetData = null;
+            if (currentMode === 'policy') {
+                targetData = policyData[id]; // 自国データのみ
+            } else {
+                targetData = baseMapData[id]; // 全データ
+            }
+
+            // 全エリアの選択枠リセット
+            const svgElement = document.querySelector('#map-wrapper svg');
+            svgElement.querySelectorAll('path, circle, rect, polygon').forEach(p => { 
+                // モードごとのデフォルト枠線に戻す
+                if(currentMode === 'policy' && p.style.fill !== 'rgb(17, 17, 17)'){
+                    p.style.stroke = "#fff"; p.style.strokeWidth = "0.5px";
+                } else {
+                    p.style.stroke = "#000"; p.style.strokeWidth = "0.2px";
+                }
+            });
+
+            // 選択枠強調
+            const targetEl = document.getElementById(id) || svgElement.querySelector('#' + CSS.escape(id));
+            if(targetEl) {
+                targetEl.style.stroke = "#ffffff";
+                targetEl.style.strokeWidth = "2.5px";
+            }
+
+            if (targetData) {
                 let html = `<p style="font-size:1.1em; color:#fff; border-bottom:1px solid #555; padding-bottom:5px;"><b>${id}</b></p><table style="width:100%; font-size:14px; color:#ccc; border-collapse:collapse;">`;
-                for (const [key, val] of Object.entries(data)) {
-                    if(key !== 'ID') html += `<tr style="border-bottom:1px solid #333;"><td style="width:40%; color:#888; padding:8px 0;">${key}</td><td style="padding:8px 0;">${val}</td></tr>`;
+                for (const [key, val] of Object.entries(targetData)) {
+                    // 内部処理用のキー(_Value)は表示しない
+                    if(key !== 'ID' && key !== '_Value') {
+                        html += `<tr style="border-bottom:1px solid #333;"><td style="width:40%; color:#888; padding:8px 0;">${key}</td><td style="padding:8px 0;">${val}</td></tr>`;
+                    }
                 }
                 html += `</table>`;
                 infoBox.innerHTML = html;
             } else {
-                infoBox.innerHTML = `<p>エリアID: ${id}<br>詳細データなし</p>`;
+                if(currentMode === 'policy') {
+                    infoBox.innerHTML = `<p>エリアID: ${id}<br>データなし（他国領または未登録）</p>`;
+                } else {
+                    infoBox.innerHTML = `<p>エリアID: ${id}<br>詳細データなし</p>`;
+                }
             }
         }
     </script>
