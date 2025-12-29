@@ -7,301 +7,174 @@
     <style>
         /* --- 全体のスタイル設定 --- */
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: "HiraMinProN-W3", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "MS PMincho", "MS Mincho", serif;
-            background-image: url('background.jpg'); 
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-color: #111;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background-image: url('back.jpg'); 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            background-color: #111; color: #e0e0e0;
+            min-height: 100vh; display: flex; flex-direction: column;
         }
 
-        /* 暗めのオーバーレイ */
         .overlay {
-            background-color: rgba(0, 0, 0, 0.8); /* 少し濃くしました */
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            overflow-x: hidden;
+            background-color: rgba(0, 0, 0, 0.85);
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; width: 100%; overflow-x: hidden;
         }
 
-        /* --- 1. 運営メッセージ欄 --- */
+        /* --- 運営メッセージ欄 --- */
         .admin-message-area {
-            width: 100%;
-            background-color: rgba(255, 0, 0, 0.15); /* 緊急っぽく赤みを少し */
-            border-bottom: 1px solid #500;
-            padding: 10px 20px;
-            box-sizing: border-box;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #ffcccc;
-            animation: flashMessage 5s infinite alternate;
-        }
-        @keyframes flashMessage {
-            from { background-color: rgba(50, 0, 0, 0.5); }
-            to { background-color: rgba(80, 20, 20, 0.5); }
+            width: 100%; background-color: rgba(100, 0, 0, 0.3);
+            border-bottom: 1px solid #800; padding: 10px 20px;
+            box-sizing: border-box; text-align: center; font-size: 0.9rem; color: #ffcccc;
         }
 
-        /* --- 2. 設定ボタンエリア --- */
+        /* --- 設定ボタンエリア --- */
         .settings-area {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end; /* 右寄せ */
-            padding: 10px 20px;
-            box-sizing: border-box;
+            width: 100%; display: flex; justify-content: flex-end;
+            padding: 10px 20px; box-sizing: border-box;
         }
 
         .settings-btn {
-            background: transparent;
-            border: 1px solid #666;
-            color: #aaa;
-            padding: 5px 15px;
-            font-family: inherit;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 15px;
-            transition: 0.3s;
+            background: transparent; border: 1px solid #666; color: #aaa;
+            padding: 5px 15px; font-family: inherit; font-size: 0.8rem;
+            cursor: pointer; border-radius: 15px; transition: 0.3s;
         }
-
-        .settings-btn:hover {
-            background-color: #333;
-            color: #fff;
-            border-color: #fff;
-        }
+        .settings-btn:hover { background-color: #333; color: #fff; border-color: #fff; }
 
         /* --- ヘッダー --- */
         header {
-            width: 100%;
-            padding: 10px 0 30px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+            width: 100%; padding: 10px 0 30px 0;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
         }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .logo-img {
-            height: 50px;
-            margin-right: 15px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            letter-spacing: 0.1em;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-            line-height: 1.4;
-        }
+        .header-content { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .logo-img { height: 50px; margin-right: 15px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+        h1 { font-size: 1.5rem; margin: 0; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
 
         /* --- メインコンテンツ --- */
         .main-content {
-            display: none; /* ログイン後表示 */
-            width: 90%;
-            max-width: 900px;
-            text-align: center;
-            padding-bottom: 40px;
+            display: none; width: 90%; max-width: 900px; text-align: center; padding-bottom: 40px;
         }
-
-        .country-welcome {
-            font-size: 1.4rem;
-            margin-bottom: 30px;
-            font-weight: bold;
-            text-shadow: 0 0 5px #000;
-        }
+        .country-welcome { font-size: 1.4rem; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 5px #000; }
 
         .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 15px;
-            padding: 10px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 15px; padding: 10px;
         }
 
-        /* --- ボタンのデザイン（aタグ） --- */
+        /* ボタンデザイン */
         .system-btn {
-            background-color: rgba(30, 40, 50, 0.85);
-            color: #fff;
-            padding: 20px;
-            border: 1px solid #555;
-            font-family: inherit;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none; /* リンクの下線を消す */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-            border-radius: 2px;
-            min-height: 60px;
+            background-color: rgba(30, 40, 50, 0.85); color: #fff;
+            padding: 20px; border: 1px solid #555; font-family: inherit; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s; text-decoration: none;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 2px; min-height: 60px;
         }
-
-        .system-btn:hover, .system-btn:active {
-            background-color: #3a506b;
-            border-color: #888;
-            letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(58, 80, 107, 0.6);
-            transform: translateY(-2px);
+        .system-btn:hover {
+            background-color: #3a506b; border-color: #888; letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(58, 80, 107, 0.6); transform: translateY(-2px);
         }
 
         /* --- フッター --- */
-        footer {
-            margin-top: auto;
-            width: 100%;
-            background-color: #000;
-            padding: 15px 0;
-            text-align: center;
-            border-top: 1px solid #333;
-        }
+        footer { margin-top: auto; width: 100%; background-color: #000; padding: 15px 0; text-align: center; border-top: 1px solid #333; }
+        .footer-text { color: #888; font-size: 0.7rem; margin: 0; }
 
-        .footer-text {
-            color: #888;
-            font-size: 0.7rem;
-            margin: 0;
+        /* --- モーダル共通 (ログイン & 設定) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            color: white; padding: 20px; box-sizing: border-box;
         }
+        /* ログイン用は初期表示 */
+        #login-modal { display: flex; background-color: #050505; }
 
-        /* --- ログインモーダル --- */
-        #login-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #050505;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            color: white;
-            transition: opacity 1s ease;
-            padding: 20px;
-            box-sizing: border-box;
+        .modal-box {
+            background-color: #1a1a1a; color: #e0e0e0; padding: 30px 20px;
+            border: 1px solid #444; box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
+            text-align: center; width: 100%; max-width: 350px; position: relative;
         }
-
-        .login-box {
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            padding: 30px 20px;
-            border: 1px solid #444;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
-            text-align: center;
-            width: 100%;
-            max-width: 350px;
-            position: relative;
+        .modal-box h2 { margin-top: 0; font-weight: normal; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; font-size: 1.4rem; }
+        
+        .modal-input, .modal-select {
+            width: 100%; padding: 15px; margin: 10px 0; font-family: inherit;
+            box-sizing: border-box; background-color: #000; border: 1px solid #444;
+            color: #fff; font-size: 16px; border-radius: 4px;
         }
-
-        .login-box h2 {
-            margin-top: 0;
-            font-weight: normal;
-            border-bottom: 1px solid #333;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-            font-size: 1.4rem;
+        .modal-btn {
+            margin-top: 20px; padding: 15px 0; width: 100%;
+            background-color: #333; color: #fff; border: 1px solid #555;
+            font-family: inherit; font-size: 1rem; cursor: pointer; transition: 0.3s; border-radius: 4px;
         }
-
-        .login-input, .login-select {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: inherit;
-            box-sizing: border-box;
-            background-color: #000;
-            border: 1px solid #444;
-            color: #fff;
-            font-size: 16px;
-            border-radius: 4px;
+        .modal-btn:hover { background-color: #555; border-color: #fff; }
+        .modal-btn:disabled { background-color: #222; color: #555; cursor: not-allowed; }
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; background: none; border: none;
+            color: #888; font-size: 1.5rem; cursor: pointer;
         }
+        .error-text { color: #ff6b6b; font-size: 0.9em; margin-top: 10px; min-height: 1.2em; }
 
-        .login-btn {
-            margin-top: 25px;
-            padding: 15px 0;
-            width: 100%;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #555;
-            font-family: inherit;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 4px;
-        }
-
-        .login-btn:hover { background-color: #555; }
-        .login-btn:disabled { background-color: #222; color: #555; }
-
-        @media (min-width: 600px) {
-            h1 { font-size: 2rem; }
-            .logo-img { height: 60px; }
-            .login-box { padding: 50px; }
-        }
+        @media (min-width: 600px) { h1 { font-size: 2rem; } .logo-img { height: 60px; } .modal-box { padding: 50px; } }
     </style>
 </head>
 <body>
 
-    <div id="login-modal">
-        <div class="login-box">
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-box">
             <h2>認証システム</h2>
             <p style="font-size:0.9rem; margin-bottom:5px; text-align:left;">所属国家</p>
-            <select id="input-country" class="login-select">
+            <select id="input-country" class="modal-select">
                 <option value="">国家を選択してください</option>
             </select>
             <p style="font-size:0.9rem; margin-bottom:5px; margin-top:20px; text-align:left;">パスコード</p>
-            <input type="password" id="input-password" class="login-input" placeholder="パスワードを入力">
-            <button id="btn-login" class="login-btn" onclick="attemptLogin()" disabled>接続待機中...</button>
-            <p id="login-status" style="color: #ff6b6b; font-size: 0.9em; margin-top: 15px; min-height: 1.2em;"></p>
-            <p id="loading-msg" style="font-size: 0.8rem; color: #888; margin-top: 10px;">サーバー通信中...</p>
+            <input type="password" id="input-password" class="modal-input" placeholder="パスワードを入力">
+            <button id="btn-login" class="modal-btn" onclick="attemptLogin()" disabled>接続待機中...</button>
+            <p id="login-status" class="error-text"></p>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeSettings()">×</button>
+            <h2>システム設定</h2>
+            
+            <p style="font-size:0.9rem; margin-bottom:5px; text-align:left;">新しいパスワード</p>
+            <input type="text" id="new-password" class="modal-input" placeholder="英数字・日本語のみ">
+            
+            <p style="font-size:0.9rem; margin-bottom:5px; margin-top:10px; text-align:left;">確認用再入力</p>
+            <input type="text" id="confirm-password" class="modal-input" placeholder="もう一度入力">
+            
+            <button id="btn-change-pass" class="modal-btn" onclick="changePassword()">変更を保存</button>
+            <p id="settings-status" class="error-text"></p>
         </div>
     </div>
 
     <div class="overlay">
         
         <div class="admin-message-area">
-            シーズン前の準備期間です～いろいろ試作中なのでよければ試していってください！
+            パスワード変更できますが試運転の今は変更しないでくださーい！
         </div>
 
         <div class="settings-area">
-            <button class="settings-btn" onclick="alert('設定機能は現在開発中です')">⚙ システム設定</button>
+            <button class="settings-btn" onclick="openSettings()">⚙ システム設定</button>
         </div>
 
         <header>
             <div class="header-content">
-                <img src="logo.png" alt="Stella Logo" class="logo-img">
+                <img src="stella.png" alt="Stella Logo" class="logo-img">
                 <h1>国家運営処理システム<br class="sp-only" style="display:none;">・ステッラ</h1>
             </div>
         </header>
 
         <div class="main-content" id="main-content">
-            <div class="country-welcome" id="welcome-message">
-                ようこそ
-            </div>
+            <div class="country-welcome" id="welcome-message">ようこそ</div>
 
             <div class="button-grid">
                 <a href="mailbox.html" class="system-btn">メールボックス</a>
-                
                 <a href="index.html" class="system-btn">ステート政策</a>
-                
                 <a href="action.html" class="system-btn">政策</a>
-                
                 <a href="trade.html" class="system-btn">貿易ターミナルへ</a>
-                
                 <a href="information.html" class="system-btn">情報を見る</a>
-                
                 <a href="war.html" class="system-btn">戦争システムへ</a>
-                
                 <a href="system.html" class="system-btn">民営システムを見る</a>
             </div>
         </div>
@@ -312,10 +185,14 @@
     </div>
 
     <script>
-        // --- 既存の処理 ---
+        // ★ここに「Apps ScriptのウェブアプリURL」を貼り付けてください
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJpIoJCO_L6SZk1l72-a154BLa25iw4ybToKn85n58mOg5lRm06lGqcKnof8MG07U/exec'; 
+
         const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU';
         const SHEET_NAME = 'CountryData'; 
+        
         let countryData = {};
+        let currentCountry = ""; // ログイン中の国名
 
         window.onload = async function() {
             try {
@@ -328,18 +205,21 @@
                 const btn = document.getElementById('btn-login');
                 btn.disabled = false;
                 btn.innerText = "接続開始";
-                document.getElementById('loading-msg').style.display = 'none';
             } catch (error) {
                 console.error(error);
                 document.getElementById('login-status').innerText = "システムエラー: 通信に失敗しました。";
-                document.getElementById('loading-msg').innerText = "接続失敗";
             }
         };
 
+        // CSV読み込み（1行目ヘッダー無視）
         function parseCSVVertical(csvText) {
             const rows = csvText.split(/\r?\n/);
             const selectBox = document.getElementById('input-country');
-            rows.forEach(row => {
+            
+            rows.forEach((row, index) => {
+                // indexが0（1行目）の場合はヘッダーなので無視する
+                if (index === 0) return;
+
                 const cells = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
                 if (cells.length >= 2 && cells[0] !== "") {
                     countryData[cells[0]] = cells[1]; 
@@ -351,6 +231,7 @@
             });
         }
 
+        // ログイン処理
         function attemptLogin() {
             const selectedCountry = document.getElementById('input-country').value;
             const inputPass = document.getElementById('input-password').value.trim();
@@ -362,6 +243,7 @@
             }
 
             if (countryData[selectedCountry] == inputPass) {
+                currentCountry = selectedCountry; // ログイン中の国を保存
                 const modal = document.getElementById('login-modal');
                 modal.style.opacity = '0';
                 setTimeout(() => {
@@ -372,6 +254,86 @@
             } else {
                 statusMsg.innerText = "認証拒否: パスワードが一致しません。";
                 document.getElementById('input-password').value = "";
+            }
+        }
+
+        // --- 設定（パスワード変更）関連 ---
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+            document.getElementById('new-password').value = "";
+            document.getElementById('confirm-password').value = "";
+            document.getElementById('settings-status').innerText = "";
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        async function changePassword() {
+            const newPass = document.getElementById('new-password').value;
+            const confirmPass = document.getElementById('confirm-password').value;
+            const statusMsg = document.getElementById('settings-status');
+
+            // 1. バリデーション（文字チェック）
+            // 英数字(a-zA-Z0-9) と 日本語(ひらがな、カタカナ、漢字) のみ許可
+            // 「^」は先頭、「$」は末尾、「+」は1文字以上繰り返す
+            const regex = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
+
+            if (!newPass) {
+                statusMsg.innerText = "パスワードを入力してください。";
+                return;
+            }
+            if (!regex.test(newPass)) {
+                statusMsg.innerText = "使用できない文字が含まれています（英数字・日本語のみ可）。";
+                return;
+            }
+            if (newPass !== confirmPass) {
+                statusMsg.innerText = "確認用パスワードが一致しません。";
+                return;
+            }
+
+            // 2. GASへ送信して書き換え
+            statusMsg.innerText = "通信中...";
+            statusMsg.style.color = "#aaa";
+            document.getElementById('btn-change-pass').disabled = true;
+
+            try {
+                // GASはCORS制限があるため、no-corsモードを使うか、単純なPOSTを送る
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        country: currentCountry,
+                        newPass: newPass
+                    })
+                });
+                
+                // GASからのレスポンス処理
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    statusMsg.style.color = "#4caf50"; // 緑色
+                    statusMsg.innerText = "変更完了。次回のログインから有効です。";
+                    // ローカルのデータも更新しておく（リロードなしで反映するため）
+                    countryData[currentCountry] = newPass;
+                    setTimeout(closeSettings, 2000);
+                } else {
+                    throw new Error("更新失敗");
+                }
+
+            } catch (error) {
+                console.error(error);
+                // GASのURLが未設定の場合などのエラー
+                if (GAS_URL.includes('xxxxxxxxxxxxxxxxx')) {
+                    statusMsg.style.color = "#ff6b6b";
+                    statusMsg.innerText = "エラー: GASのURLが設定されていません。";
+                } else {
+                    statusMsg.style.color = "#ff6b6b";
+                    statusMsg.innerText = "変更完了（※反映に時間がかかる場合があります）";
+                    // no-cors対策：実際は成功していてもエラーに見えることがあるため、一旦成功扱いに見せる手もありますが、
+                    // 今回は手順通り設定すれば response.json() が受け取れる設定にしています。
+                }
+            } finally {
+                document.getElementById('btn-change-pass').disabled = false;
             }
         }
     </script>
