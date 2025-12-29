@@ -186,7 +186,7 @@
 
     <script>
         // ★ここに「Apps ScriptのウェブアプリURL」を貼り付けてください
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJpIoJCO_L6SZk1l72-a154BLa25iw4ybToKn85n58mOg5lRm06lGqcKnof8MG07U/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9dY9JPgJ9zm3CZxoaRF3NrZvFpT_aljyDsp30i1aiPZ9fxhmYkPuJvU-Cy-nUgj-z/exec'; 
 
         const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU';
         const SHEET_NAME = 'CountryData'; 
@@ -268,15 +268,18 @@
         function closeSettings() {
             document.getElementById('settings-modal').style.display = 'none';
         }
+  
+// ★ここに手順2で確認したURLを貼ってください（URLが変わっている可能性があります！）
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9dY9JPgJ9zm3CZxoaRF3NrZvFpT_aljyDsp30i1aiPZ9fxhmYkPuJvU-Cy-nUgj-z/exec'; 
+
+        // ... (中略) ...
 
         async function changePassword() {
             const newPass = document.getElementById('new-password').value;
             const confirmPass = document.getElementById('confirm-password').value;
             const statusMsg = document.getElementById('settings-status');
 
-            // 1. バリデーション（文字チェック）
-            // 英数字(a-zA-Z0-9) と 日本語(ひらがな、カタカナ、漢字) のみ許可
-            // 「^」は先頭、「$」は末尾、「+」は1文字以上繰り返す
+            // 1. バリデーション
             const regex = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
 
             if (!newPass) {
@@ -292,28 +295,31 @@
                 return;
             }
 
-            // 2. GASへ送信して書き換え
+            // 2. GASへ送信（CORS対策版）
             statusMsg.innerText = "通信中...";
             statusMsg.style.color = "#aaa";
             document.getElementById('btn-change-pass').disabled = true;
 
             try {
-                // GASはCORS制限があるため、no-corsモードを使うか、単純なPOSTを送る
+                // 【変更点】JSONではなく「フォームデータ」として送る
+                const formData = new URLSearchParams();
+                formData.append('country', currentCountry);
+                formData.append('newPass', newPass);
+
+                // fetchの設定を変更
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        country: currentCountry,
-                        newPass: newPass
-                    })
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
                 });
-                
-                // GASからのレスポンス処理
+
                 const result = await response.json();
                 
                 if (result.result === 'success') {
-                    statusMsg.style.color = "#4caf50"; // 緑色
-                    statusMsg.innerText = "変更完了。次回のログインから有効です。";
-                    // ローカルのデータも更新しておく（リロードなしで反映するため）
+                    statusMsg.style.color = "#4caf50";
+                    statusMsg.innerText = "変更完了。";
                     countryData[currentCountry] = newPass;
                     setTimeout(closeSettings, 2000);
                 } else {
@@ -322,20 +328,11 @@
 
             } catch (error) {
                 console.error(error);
-                // GASのURLが未設定の場合などのエラー
-                if (GAS_URL.includes('xxxxxxxxxxxxxxxxx')) {
-                    statusMsg.style.color = "#ff6b6b";
-                    statusMsg.innerText = "エラー: GASのURLが設定されていません。";
-                } else {
-                    statusMsg.style.color = "#ff6b6b";
-                    statusMsg.innerText = "変更完了（※反映に時間がかかる場合があります）";
-                    // no-cors対策：実際は成功していてもエラーに見えることがあるため、一旦成功扱いに見せる手もありますが、
-                    // 今回は手順通り設定すれば response.json() が受け取れる設定にしています。
-                }
+                // GAS特有の「成功しているのにCORSエラーが出る」場合の対策
+                // 実は書き込めていることが多いので、スプレッドシートを確認してもらう
+                statusMsg.style.color = "#ff6b6b";
+                statusMsg.innerText = "送信しました。（※エラー表示でも変更されている場合があります。一度リロードして確認してください）";
             } finally {
                 document.getElementById('btn-change-pass').disabled = false;
             }
         }
-    </script>
-</body>
-</html>
