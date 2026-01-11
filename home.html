@@ -194,22 +194,42 @@
         let countryData = {};
         let currentCountry = ""; // ログイン中の国名
 
+        // ↓↓↓ ここから書き換え ↓↓↓
         window.onload = async function() {
+            const btn = document.getElementById('btn-login');
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+                // キャッシュ回避のためにタイムスタンプ(?t=...)を付与
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}&t=${new Date().getTime()}`;
+                
                 const response = await fetch(url);
-                if (!response.ok) throw new Error("データ取得失敗");
+                if (!response.ok) throw new Error("データ取得失敗: " + response.status);
+                
                 const text = await response.text();
+
+                // 【診断】もしHTML（ログイン画面など）が返ってきていたらアラートを出す
+                if (text.trim().startsWith("<")) {
+                    alert("【設定エラー】\nスプレッドシートのデータではなく、Googleのログイン画面が読み込まれています。\n\nスプレッドシートの「共有設定」を「リンクを知っている全員」に変更してください。");
+                    return;
+                }
+
+                // 【診断】データが空、またはヘッダーしかない場合
+                const rows = text.split(/\r?\n/);
+                if (rows.length <= 1) {
+                     alert("【データエラー】\nデータが読み込めませんでした。\nシート名（タブ名）が '" + SHEET_NAME + "' か確認してください。\nまた、A列に国名が入っているか確認してください。");
+                }
+
                 parseCSVVertical(text);
                 
-                const btn = document.getElementById('btn-login');
+                // 成功時
                 btn.disabled = false;
                 btn.innerText = "接続開始";
+                
             } catch (error) {
                 console.error(error);
-                document.getElementById('login-status').innerText = "システムエラー: 通信に失敗しました。";
+                document.getElementById('login-status').innerText = "システムエラー: " + error.message;
             }
         };
+        // ↑↑↑ ここまで書き換え ↑↑↑
 
         // CSV読み込み（1行目ヘッダー無視）
         function parseCSVVertical(csvText) {
