@@ -24,26 +24,38 @@
         /* ヘッダー */
         header {
             background: var(--bg-dark);
-            padding: 15px;
+            padding: 10px 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             border-bottom: 2px solid var(--accent);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        header img {
-            width: 40px;
-            height: 40px;
+        .header-left { display: flex; align-items: center; }
+        .header-right { font-size: 0.8rem; color: var(--accent); font-weight: bold; }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
             margin-right: 15px;
+            text-decoration: none;
+            font-size: 0.8rem;
         }
 
-        header h1 {
-            font-size: 1.2rem;
-            margin: 0;
+        header img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
         }
+
+        header h1 { font-size: 1rem; margin: 0; }
 
         /* メールリスト */
         .container {
@@ -79,8 +91,8 @@
         }
 
         .mail-body {
-            white-space: pre-wrap; /* 改行を反映 */
-            word-wrap: break-word; /* 長い単語を折り返す */
+            white-space: pre-wrap;
+            word-wrap: break-word;
             line-height: 1.6;
         }
 
@@ -140,6 +152,7 @@
             width: 100%;
             border-radius: 5px;
             font-weight: bold;
+            cursor: pointer;
         }
 
         .close-btn {
@@ -148,17 +161,19 @@
             cursor: pointer;
             font-size: 20px;
         }
-
-        @media (max-width: 600px) {
-            header h1 { font-size: 1rem; }
-        }
     </style>
 </head>
 <body>
 
 <header>
-    <img src="stella.pig" alt="Logo">
-    <h1>ステッラ・メールボックス</h1>
+    <div class="header-left">
+        <a href="home.html" class="back-btn">◀ 戻る</a>
+        <img src="stella.pig" alt="Logo">
+        <h1>ステッラ・メールボックス</h1>
+    </div>
+    <div class="header-right" id="display-country">
+        Loading...
+    </div>
 </header>
 
 <div class="container" id="mail-list">
@@ -171,19 +186,20 @@
     <div class="modal-content">
         <span class="close-btn" onclick="toggleModal(false)">×</span>
         <h3>新規メッセージ作成</h3>
+        <label style="font-size: 0.8rem;">宛先を選択:</label>
         <select id="toCountry"></select>
         <input type="text" id="mailTitle" placeholder="タイトル">
         <textarea id="mailBody" rows="6" placeholder="本文を入力してください"></textarea>
-        <button class="send-btn" onclick="sendMail()">送信する</button>
+        <button class="send-btn" id="send-btn" onclick="sendMail()">送信する</button>
     </div>
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbz6VkxKs3KVA6amMm_maaQV31INI8MtSxhy7H9mIP_MQR1q8baLh74Iwc9vpaDf6f3YVg/exec';
-    const myCountry = sessionStorage.getItem('loginCountry') || 'ゲスト';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbw2iHlvHFkXvTBsbAFeDljkre_s4N89pM8xNrHPWpTi7cGSoGI_ifCbgFT4JdlDhNpyIA/exec';
+    const myCountry = sessionStorage.getItem('loginCountry') || '未ログイン';
 
-    // 初期読み込み
     window.onload = () => {
+        document.getElementById('display-country').innerText = "ログイン中: " + myCountry;
         fetchMails();
     };
 
@@ -191,18 +207,17 @@
         document.getElementById('modal').style.display = show ? 'block' : 'none';
     }
 
-    // データ取得
     async function fetchMails() {
         try {
-            const response = await fetch(`${GAS_URL}?country=${encodeURIComponent(myCountry)}`);
+            // 国名をエンコードして送信（空白対策）
+            const response = await fetch(`${GAS_URL}?country=${encodeURIComponent(myCountry.trim())}`);
             const data = await response.json();
             
-            // メールリスト表示
             const listContainer = document.getElementById('mail-list');
             listContainer.innerHTML = '';
             
             if (data.mails.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center;">メールはありません。</p>';
+                listContainer.innerHTML = '<p style="text-align:center;">あなた宛のメールはありません。</p>';
             }
 
             data.mails.forEach(mail => {
@@ -219,7 +234,6 @@
                 listContainer.appendChild(card);
             });
 
-            // 送信先プルダウン作成
             const select = document.getElementById('toCountry');
             select.innerHTML = '<option value="ALL">全体（ALL）</option>';
             data.countries.forEach(c => {
@@ -235,13 +249,16 @@
         }
     }
 
-    // メール送信
     async function sendMail() {
         const receiver = document.getElementById('toCountry').value;
         const title = document.getElementById('mailTitle').value;
         const body = document.getElementById('mailBody').value;
 
-        if (!title || !body) return alert('入力してください');
+        if (!title || !body) return alert('タイトルと本文を入力してください');
+
+        const sendBtn = document.getElementById('send-btn');
+        sendBtn.disabled = true;
+        sendBtn.innerText = "送信中...";
 
         const payload = {
             sender: myCountry,
@@ -256,10 +273,15 @@
                 body: JSON.stringify(payload)
             });
             alert('送信完了しました！');
+            document.getElementById('mailTitle').value = "";
+            document.getElementById('mailBody').value = "";
             toggleModal(false);
-            fetchMails(); // リロード
+            fetchMails();
         } catch (e) {
             alert('送信に失敗しました。');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerText = "送信する";
         }
     }
 </script>
