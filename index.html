@@ -4,25 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Territory System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 <style>
-  body { margin: 0; padding: 0; font-family: "Sawarabi Mincho", serif; background-color: #1a1a1a; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  body { 
+    margin: 0; padding: 0; 
+    font-family: "Sawarabi Mincho", serif; 
+    background-color: #1a1a1a; color: #e0e0e0; 
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+    /* スマホでのバウンススクロール防止 */
+    overscroll-behavior: none;
+  }
+  
   header { background: #000; padding: 10px 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; }
-  .nav-bar { background: #252525; padding: 8px; border-bottom: 1px solid #333; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; flex: 0 0 auto; }
+  
+  .nav-bar { 
+    background: #252525; padding: 8px; border-bottom: 1px solid #333; 
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; flex: 0 0 auto; 
+  }
   .nav-btn { background: #3d3d3d; border: 1px solid #555; color: #ddd; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
   .nav-btn.active { background: #0056b3; border-color: #007bff; color: white; }
+  
   .main-container { display: flex; flex: 1; position: relative; overflow: hidden; flex-direction: column; }
   @media(min-width: 768px) { .main-container { flex-direction: row; } }
-  #map-area { flex: 1; background: #0e0e0e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  
+  #map-area { 
+    flex: 1; background: #0e0e0e; position: relative; overflow: hidden; 
+    display: flex; align-items: center; justify-content: center;
+    /* ★重要: 地図操作中にブラウザごとのスクロールが発生しないようにする */
+    touch-action: none; 
+    user-select: none;
+    -webkit-user-select: none; 
+  }
+  
   #main-map-svg { width: 100%; height: 100%; background: #0e0e0e; touch-action: none; }
+  
   #info-panel { flex: 0 0 40%; background: #202020; border-top: 2px solid #444; padding: 15px; box-sizing: border-box; overflow-y: auto; font-family: sans-serif; }
   @media(min-width: 768px) { #info-panel { flex: 0 0 340px; border-top: none; border-left: 2px solid #444; height: auto; } }
+  
   .zoom-ctrl { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 10; }
   .zoom-btn { width: 40px; height: 40px; background: rgba(50,50,50,0.8); color: #fff; border: 1px solid #666; border-radius: 5px; cursor: pointer; font-size: 18px; }
+  
   .act-btn { width: 100%; padding: 10px; margin-top: 8px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; display: flex; justify-content: space-between; align-items: center; }
   .btn-green { background: #28a745; } .btn-red { background: #dc3545; } .btn-disabled { background: #555; color: #aaa; cursor: not-allowed; }
   .btn-label { font-size: 14px; } .btn-sub { font-size: 11px; font-weight: normal; opacity: 0.8; }
+  
   #save-bar { background: #004085; border: 1px solid #b8daff; color: #fff; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 15px; display: none; }
   .save-trigger-btn { background: #007bff; border: none; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: bold; }
+  
   #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999; display: flex; align-items: center; justify-content: center; }
   .login-box { background: #333; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
   .login-input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
@@ -106,7 +134,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbypi60ugLEZfM9C22ysYxS5
 
 let myCountry = null;
 let baseMapData = {}; 
-let myPolicyData = {}; // { ID: { Economy, Security, Development, Human, Metal... } }
+let myPolicyData = {}; 
 let actionData = {}; 
 let pendingData = {}; 
 let currentMode = 'normal';
@@ -161,7 +189,12 @@ function loadAllData() {
     if(polRes.status === 'success') myPolicyData = polRes.data;
     if(actRes.status === 'success') actionData = actRes.data;
     
-    document.getElementById('main-map-svg').addEventListener('click', onMapClick);
+    // タップ判定の調整: ズーム操作とクリックを区別
+    const mapEl = document.getElementById('main-map-svg');
+    // Hammer.jsが入っているとclickイベントが吸われることがあるので、
+    // 明示的にクリックイベントは残すが、ドラッグ時は発火させない制御はライブラリに任せる
+    mapEl.addEventListener('click', onMapClick);
+    
     changeMode('normal');
   });
 }
@@ -207,49 +240,32 @@ function drawMap() {
       }
     }
   } else {
-    // データ値に基づく色分け
     Object.keys(myPolicyData).forEach(id => {
       const el = document.getElementById(id);
       const data = myPolicyData[id];
       if(el && data) {
-        
-        // --- 色決定ロジック ---
         if (currentMode === 'domestic') {
-            // 内政 (K列: Security)
-            // 100=緑, 0=赤, -100=焦げた赤
             const val = data.Security;
             if (val >= 0) {
-                // 0(赤) -> 100(緑)
                 const hue = Math.max(0, Math.min(120, (val / 100) * 120));
                 el.style.fill = `hsl(${hue}, 80%, 40%)`;
             } else {
-                // 0(赤) -> -100(焦げた赤:黒に近い赤)
-                // Lightnessを落とす
                 const darkRatio = Math.min(1, Math.abs(val) / 100); 
-                // Lightness: 40% -> 10%
                 const l = 40 - (30 * darkRatio);
                 el.style.fill = `hsl(0, 80%, ${l}%)`;
             }
-
         } else {
-            // 他のモード (High=Green, Low=Red)
-            // 範囲の自動計算 or 固定？ 
-            // ひとまず 0～100 を基準としますが、相対的に計算します。
             let val = 0;
-            if (currentMode === 'policy') val = data.Economy; // D列
-            else if (currentMode === 'land') val = data.Development; // C列
-            else if (currentMode === 'industry') val = data.Human; // L列
+            if (currentMode === 'policy') val = data.Economy;
+            else if (currentMode === 'land') val = data.Development;
+            else if (currentMode === 'industry') val = data.Human;
             
-            // 0～100の範囲でヒートマップ (上限なしなら max使用推奨だが、ひとまず0-100想定)
             let ratio = val / 100; 
-            if(ratio > 1) ratio = 1; 
-            if(ratio < 0) ratio = 0;
-            
-            const hue = Math.floor(ratio * 120); // 0(Red) -> 120(Green)
+            if(ratio > 1) ratio = 1; if(ratio < 0) ratio = 0;
+            const hue = Math.floor(ratio * 120);
             el.style.fill = `hsl(${hue}, 70%, 40%)`;
         }
 
-        // --- 黄色枠線 (アクション中) ---
         let isActive = false;
         if(currentMode === 'industry') {
             const d = getCombinedActionData(id);
@@ -277,6 +293,8 @@ function drawMap() {
 }
 
 function onMapClick(e) {
+  // ドラッグ中やピンチ中の誤クリックを防ぐため、svg-pan-zoomのイベント状況を確認できれば良いが、
+  // 簡易的には「クリックされた要素」がパスかどうかで判定
   const target = e.target.closest('path, polygon, circle, rect');
   if(!target || !target.id || target.getAttribute('fill')==='#0e0e0e') return;
   currentSelectedId = target.id;
@@ -288,7 +306,6 @@ function showInfo(id) {
   const container = document.getElementById('panel-content');
   const polInfo = myPolicyData[id];
   
-  // ★常に PolicyData の値を表示する
   let html = `<h4>${id}</h4>`;
   if (polInfo) {
       html += `<table style="width:100%; font-size:0.9em; color:#ccc; margin-bottom:10px;">
@@ -301,7 +318,6 @@ function showInfo(id) {
       html += `<p style="color:#888;">自国領土外、またはデータなし</p>`;
   }
 
-  // アクションボタン生成
   if(currentMode !== 'normal' && polInfo) {
       const isActive = getActiveStatus(id, currentMode);
       
@@ -311,45 +327,37 @@ function showInfo(id) {
       
       } else if(currentMode === 'domestic') {
           const act = getActiveStatus(id, 'domestic');
-          // 制限: 治安(K) >= 80 で不可
           let disabled = (!act && polInfo.Security >= 80);
           html += createBtnHtml('domestic', id, act, act?'内政中止':'内政実施', disabled?'治安80以上': '治安改善', disabled);
       
       } else if(currentMode === 'land') {
           const act = getActiveStatus(id, 'land');
-          // 制限: 開発(C) >= 50 で不可
           let disabled = (!act && polInfo.Development >= 50);
           html += createBtnHtml('land', id, act, act?'開発中止':'開発実施', disabled?'開発50以上':'インフラ整備', disabled);
       
       } else if(currentMode === 'industry') {
-          // 金属(G >= 1)
           if(polInfo.Metal >= 1) {
              const a = getActiveStatus(id, 'metal');
              html += createBtnHtml('metal', id, a, a?'金属鉱山破棄':'金属鉱山建設', '資源あり');
           }
-          // レア(H >= 1)
           if(polInfo.Rare >= 1) {
              const a = getActiveStatus(id, 'rare');
              html += createBtnHtml('rare', id, a, a?'レア鉱山破棄':'レア鉱山建設', '資源あり');
           }
-          // 食糧(I >= 1)
           if(polInfo.Food >= 1) {
              const a = getActiveStatus(id, 'food');
              html += createBtnHtml('food', id, a, a?'農場破棄':'食糧資源建設', '適正あり');
           }
-          // 燃料(J >= 1)
           if(polInfo.Fuel >= 1) {
              const a = getActiveStatus(id, 'fuel');
              html += createBtnHtml('fuel', id, a, a?'油田/炭鉱破棄':'燃料資源建設', '資源あり');
           }
-          // 民需・軍需
           const civ = getActiveStatus(id, 'civilian');
           html += createBtnHtml('civilian', id, civ, civ?'民需解体':'民需建設', '');
           const mil = getActiveStatus(id, 'military');
           html += createBtnHtml('military', id, mil, mil?'軍需解体':'軍需建設', '');
       }
   }
-
   container.innerHTML = html;
 }
 
@@ -369,8 +377,7 @@ function toggleAction(type, id) {
   const cur = getActiveStatus(id, type);
   const next = cur === 1 ? 0 : 1;
   const key = `${id}_${type}`;
-  pendingData[key] = { id: id, type: type, val: next }; // IDを含める
-  
+  pendingData[key] = { id: id, type: type, val: next };
   document.getElementById('save-bar').style.display = 'block';
   drawMap(); 
   showInfo(id);
@@ -394,8 +401,6 @@ function getCombinedActionData(id) {
 function sendBatchUpdate() {
   const btn = document.querySelector('.save-trigger-btn');
   btn.disabled = true; btn.textContent = '送信中...';
-
-  // pendingDataには {id, type, val} が入っているのでそのまま送る
   const payload = JSON.stringify(pendingData);
 
   fetch(`${API_URL}?op=bulkUpdate&updates=${encodeURIComponent(payload)}`)
@@ -416,11 +421,63 @@ function sendBatchUpdate() {
     });
 }
 
+// ★ スマホ操作対応のためのイベントハンドラ設定 ★
 function setupPanZoom() {
+  // Hammer.jsを使ってタッチイベントを svg-pan-zoom に伝える
+  const eventsHandler = {
+    haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'leave', 'move', 'enter'],
+    init: function(options) {
+      var instance = options.instance
+        , initialScale = 1
+        , pannedX = 0
+        , pannedY = 0
+
+      // Hammerインスタンス作成
+      this.hammer = new Hammer(options.svgElement, {
+        inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+      })
+
+      // ピンチ操作を有効化
+      this.hammer.get('pinch').set({enable: true})
+
+      // パン（移動）操作
+      this.hammer.on('panstart panmove', function(ev){
+        if(ev.type === 'panstart'){
+          pannedX = 0; pannedY = 0;
+        }
+        instance.panBy({x: ev.deltaX - pannedX, y: ev.deltaY - pannedY})
+        pannedX = ev.deltaX; pannedY = ev.deltaY;
+      })
+
+      // ピンチ（拡大縮小）操作
+      this.hammer.on('pinchstart pinchmove', function(ev){
+        if(ev.type === 'pinchstart'){
+          initialScale = instance.getZoom()
+          instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y})
+        }
+        instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y})
+      })
+
+      // ダブルタップでリセットなどを防ぐ
+      options.svgElement.addEventListener('dblclick', function(e){ e.preventDefault(); });
+    },
+    destroy: function(){
+      this.hammer.destroy()
+    }
+  }
+
   setTimeout(() => {
     const svg = document.getElementById('main-map-svg');
     if(svg) {
-      pzInstance = svgPanZoom(svg, { zoomEnabled: true, controlIconsEnabled: false, fit: true, center: true, minZoom: 0.5, maxZoom: 20 });
+      pzInstance = svgPanZoom(svg, {
+        zoomEnabled: true, 
+        controlIconsEnabled: false, 
+        fit: true, 
+        center: true, 
+        minZoom: 0.5, 
+        maxZoom: 20,
+        customEventsHandler: eventsHandler // ★ここが重要
+      });
     }
   }, 500);
 }
