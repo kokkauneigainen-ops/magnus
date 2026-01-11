@@ -5,354 +5,333 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国家運営処理システム・ステッラ</title>
     <style>
-        /* --- 全体のスタイル設定 --- */
+        /* --- 基本設定（ダークモード） --- */
         body {
             margin: 0; padding: 0;
-            font-family: "HiraMinProN-W3", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "MS PMincho", "MS Mincho", serif;
-            background-image: url('back.jpg'); 
-            background-size: cover; background-position: center; background-attachment: fixed;
+            font-family: "HiraMinProN-W3", "Hiragino Mincho ProN", serif;
             background-color: #111; color: #e0e0e0;
+            background-image: url('background.jpg'); /* 背景画像がある場合 */
+            background-size: cover; background-position: center; background-attachment: fixed;
             min-height: 100vh; display: flex; flex-direction: column;
         }
-
         .overlay {
-            background-color: rgba(0, 0, 0, 0.85);
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; width: 100%; overflow-x: hidden;
+            background-color: rgba(0, 0, 0, 0.85); /* 全体を暗くするフィルター */
+            flex: 1; display: flex; flex-direction: column; width: 100%;
         }
 
-        /* --- 運営メッセージ欄 --- */
-        .admin-message-area {
-            width: 100%; background-color: rgba(100, 0, 0, 0.3);
-            border-bottom: 1px solid #800; padding: 10px 20px;
-            box-sizing: border-box; text-align: center; font-size: 0.9rem; color: #ffcccc;
+        /* --- 運営メッセージ --- */
+        .admin-msg {
+            background: rgba(80, 0, 0, 0.6); border-bottom: 1px solid #a00;
+            color: #ffcccc; padding: 10px; text-align: center; font-size: 0.9rem;
+            animation: pulse 3s infinite;
         }
+        @keyframes pulse { 0% {background: rgba(80,0,0,0.6);} 50% {background: rgba(120,20,20,0.6);} 100% {background: rgba(80,0,0,0.6);} }
 
         /* --- 設定ボタンエリア --- */
-        .settings-area {
-            width: 100%; display: flex; justify-content: flex-end;
-            padding: 10px 20px; box-sizing: border-box;
+        .settings-bar {
+            display: flex; justify-content: flex-end; padding: 10px 20px;
         }
-
-        .settings-btn {
-            background: transparent; border: 1px solid #666; color: #aaa;
-            padding: 5px 15px; font-family: inherit; font-size: 0.8rem;
-            cursor: pointer; border-radius: 15px; transition: 0.3s;
+        .icon-btn {
+            background: none; border: 1px solid #555; color: #aaa;
+            padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
         }
-        .settings-btn:hover { background-color: #333; color: #fff; border-color: #fff; }
+        .icon-btn:hover { background: #333; color: #fff; border-color: #fff; }
 
         /* --- ヘッダー --- */
-        header {
-            width: 100%; padding: 10px 0 30px 0;
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-        }
-        .header-content { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
-        .logo-img { height: 50px; margin-right: 15px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
-        h1 { font-size: 1.5rem; margin: 0; letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        header { text-align: center; padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .logo { height: 60px; filter: drop-shadow(0 0 5px white); margin-bottom: 10px; }
+        h1 { margin: 0; font-size: 1.8rem; letter-spacing: 0.1em; text-shadow: 0 0 10px black; }
 
-        /* --- メインコンテンツ --- */
-        .main-content {
-            display: none; width: 90%; max-width: 900px; text-align: center; padding-bottom: 40px;
+        /* --- メインメニュー（ボタン群） --- */
+        .menu-container {
+            max-width: 1000px; margin: 0 auto; width: 95%; text-align: center; padding-bottom: 50px;
+            display: none; /* ログイン後に表示 */
         }
-        .country-welcome { font-size: 1.4rem; margin-bottom: 30px; font-weight: bold; text-shadow: 0 0 5px #000; }
-
-        .button-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 15px; padding: 10px;
+        .welcome-text { font-size: 1.5rem; margin-bottom: 30px; font-weight: bold; }
+        
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;
         }
-
-        /* ボタンデザイン */
-        .system-btn {
-            background-color: rgba(30, 40, 50, 0.85); color: #fff;
-            padding: 20px; border: 1px solid #555; font-family: inherit; font-size: 1.1rem;
-            cursor: pointer; transition: all 0.3s; text-decoration: none;
+        /* リンクボタン */
+        .app-link {
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 2px; min-height: 60px;
+            background: rgba(30, 40, 50, 0.8); color: white; border: 1px solid #555;
+            padding: 25px; text-decoration: none; font-size: 1.1rem;
+            transition: 0.3s; box-shadow: 0 4px 5px rgba(0,0,0,0.5);
         }
-        .system-btn:hover {
-            background-color: #3a506b; border-color: #888; letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(58, 80, 107, 0.6); transform: translateY(-2px);
+        .app-link:hover {
+            background: #3a506b; transform: translateY(-3px); box-shadow: 0 0 15px #3a506b;
         }
 
         /* --- フッター --- */
-        footer { margin-top: auto; width: 100%; background-color: #000; padding: 15px 0; text-align: center; border-top: 1px solid #333; }
-        .footer-text { color: #888; font-size: 0.7rem; margin: 0; }
+        footer { margin-top: auto; padding: 15px; text-align: center; color: #666; font-size: 0.8rem; border-top: 1px solid #222; }
 
-        /* --- モーダル共通 (ログイン & 設定) --- */
-        .modal-overlay {
+        /* --- モーダル（ログイン・設定） --- */
+        .modal-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.95); z-index: 1000;
-            display: none; justify-content: center; align-items: center;
-            color: white; padding: 20px; box-sizing: border-box;
+            background: #000; z-index: 999;
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box;
         }
-        /* ログイン用は初期表示 */
-        #login-modal { display: flex; background-color: #050505; }
+        /* 設定モーダルは初期非表示 */
+        #settings-modal { background: rgba(0,0,0,0.9); display: none; }
 
-        .modal-box {
-            background-color: #1a1a1a; color: #e0e0e0; padding: 30px 20px;
-            border: 1px solid #444; box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
-            text-align: center; width: 100%; max-width: 350px; position: relative;
+        .modal-content {
+            background: #151515; border: 1px solid #444; padding: 40px 30px;
+            width: 100%; max-width: 350px; text-align: center; position: relative;
+            box-shadow: 0 0 40px rgba(255,255,255,0.05);
         }
-        .modal-box h2 { margin-top: 0; font-weight: normal; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; font-size: 1.4rem; }
+        .modal-content h2 { margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: normal; }
         
-        .modal-input, .modal-select {
-            width: 100%; padding: 15px; margin: 10px 0; font-family: inherit;
-            box-sizing: border-box; background-color: #000; border: 1px solid #444;
-            color: #fff; font-size: 16px; border-radius: 4px;
+        input, select {
+            width: 100%; padding: 12px; margin: 10px 0; background: #000;
+            border: 1px solid #444; color: #fff; font-size: 1rem; box-sizing: border-box;
         }
-        .modal-btn {
-            margin-top: 20px; padding: 15px 0; width: 100%;
-            background-color: #333; color: #fff; border: 1px solid #555;
-            font-family: inherit; font-size: 1rem; cursor: pointer; transition: 0.3s; border-radius: 4px;
+        button.primary-btn {
+            width: 100%; padding: 12px; margin-top: 20px; background: #333;
+            color: #fff; border: 1px solid #666; cursor: pointer; transition: 0.3s;
         }
-        .modal-btn:hover { background-color: #555; border-color: #fff; }
-        .modal-btn:disabled { background-color: #222; color: #555; cursor: not-allowed; }
-        .close-btn {
+        button.primary-btn:hover { background: #555; border-color: #fff; }
+        button.primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .close-x {
             position: absolute; top: 10px; right: 15px; background: none; border: none;
             color: #888; font-size: 1.5rem; cursor: pointer;
         }
-        .error-text { color: #ff6b6b; font-size: 0.9em; margin-top: 10px; min-height: 1.2em; }
+        .status-msg { margin-top: 15px; font-size: 0.9rem; min-height: 1.2rem; color: #ff6b6b; }
+        .ok-msg { color: #4caf50; }
 
-        @media (min-width: 600px) { h1 { font-size: 2rem; } .logo-img { height: 60px; } .modal-box { padding: 50px; } }
+        /* スマホ調整 */
+        @media (max-width: 600px) { h1 {font-size: 1.4rem;} .logo {height: 40px;} }
     </style>
 </head>
 <body>
 
-    <div id="login-modal" class="modal-overlay">
-        <div class="modal-box">
+    <div id="login-modal" class="modal-bg">
+        <div class="modal-content">
             <h2>認証システム</h2>
-            <p style="font-size:0.9rem; margin-bottom:5px; text-align:left;">所属国家</p>
-            <select id="input-country" class="modal-select">
-                <option value="">国家を選択してください</option>
+            <p style="text-align:left; font-size:0.9rem; margin:0;">所属国家</p>
+            <select id="login-country">
+                <option value="">読込中...</option>
             </select>
-            <p style="font-size:0.9rem; margin-bottom:5px; margin-top:20px; text-align:left;">パスコード</p>
-            <input type="password" id="input-password" class="modal-input" placeholder="パスワードを入力">
-            <button id="btn-login" class="modal-btn" onclick="attemptLogin()" disabled>接続待機中...</button>
-            <p id="login-status" class="error-text"></p>
+            
+            <p style="text-align:left; font-size:0.9rem; margin:15px 0 0 0;">パスコード</p>
+            <input type="password" id="login-pass" placeholder="Password">
+            
+            <button class="primary-btn" id="btn-login" onclick="execLogin()" disabled>接続待機中...</button>
+            <div id="login-status" class="status-msg"></div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-box">
-            <button class="close-btn" onclick="closeSettings()">×</button>
-            <h2>システム設定</h2>
+    <div id="settings-modal" class="modal-bg">
+        <div class="modal-content">
+            <button class="close-x" onclick="toggleSettings(false)">×</button>
+            <h2>パスワード変更</h2>
             
-            <p style="font-size:0.9rem; margin-bottom:5px; text-align:left;">新しいパスワード</p>
-            <input type="text" id="new-password" class="modal-input" placeholder="英数字・日本語のみ">
+            <p style="text-align:left; font-size:0.9rem; margin:0;">新しいパスワード</p>
+            <input type="text" id="new-pass" placeholder="英数字・日本語のみ">
+            <input type="text" id="confirm-pass" placeholder="確認のため再入力">
             
-            <p style="font-size:0.9rem; margin-bottom:5px; margin-top:10px; text-align:left;">確認用再入力</p>
-            <input type="text" id="confirm-password" class="modal-input" placeholder="もう一度入力">
-            
-            <button id="btn-change-pass" class="modal-btn" onclick="changePassword()">変更を保存</button>
-            <p id="settings-status" class="error-text"></p>
+            <button class="primary-btn" id="btn-change" onclick="execChangePass()">変更を保存</button>
+            <div id="setting-status" class="status-msg"></div>
         </div>
     </div>
 
     <div class="overlay">
-        
-        <div class="admin-message-area">
-            パスワード変更できますが試運転の今は変更しないでくださーい！
+        <div class="admin-msg">
+            【運営より】現在、システムは正常に稼働しています。定期的なパスワード変更を推奨します。
         </div>
 
-        <div class="settings-area">
-            <button class="settings-btn" onclick="openSettings()">⚙ システム設定</button>
+        <div class="settings-bar">
+            <button class="icon-btn" onclick="toggleSettings(true)">⚙ システム設定</button>
         </div>
 
         <header>
-            <div class="header-content">
-                <img src="stella.png" alt="Stella Logo" class="logo-img">
-                <h1>国家運営処理システム<br class="sp-only" style="display:none;">・ステッラ</h1>
-            </div>
+            <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+            <h1>国家運営処理システム<br>ステッラ</h1>
         </header>
 
-        <div class="main-content" id="main-content">
-            <div class="country-welcome" id="welcome-message">ようこそ</div>
-
-            <div class="button-grid">
-                <a href="mailbox.html" class="system-btn">メールボックス</a>
-                <a href="index.html" class="system-btn">ステート政策</a>
-                <a href="action.html" class="system-btn">政策</a>
-                <a href="trade.html" class="system-btn">貿易ターミナルへ</a>
-                <a href="information.html" class="system-btn">情報を見る</a>
-                <a href="war.html" class="system-btn">戦争システムへ</a>
-                <a href="system.html" class="system-btn">民営システムを見る</a>
+        <div id="main-menu" class="menu-container">
+            <div id="welcome-msg" class="welcome-text">ようこそ</div>
+            
+            <div class="grid">
+                <a href="mailbox.html" class="app-link">メールボックス</a>
+                <a href="index.html" class="app-link">ステート政策</a>
+                <a href="action.html" class="app-link">政策</a>
+                <a href="trade.html" class="app-link">貿易ターミナルへ</a>
+                <a href="information.html" class="app-link">情報を見る</a>
+                <a href="war.html" class="app-link">戦争システムへ</a>
+                <a href="system.html" class="app-link">民営システムを見る</a>
             </div>
         </div>
 
         <footer>
-            <p class="footer-text">※天オプの有志により作成されました</p>
+            ※天オプの有志により作成されました
         </footer>
     </div>
 
     <script>
-        // ★ここに「Apps ScriptのウェブアプリURL」を貼り付けてください
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9dY9JPgJ9zm3CZxoaRF3NrZvFpT_aljyDsp30i1aiPZ9fxhmYkPuJvU-Cy-nUgj-z/exec'; 
+        // ==========================================
+        // 【重要】以下の2つを書き換えてください
+        // ==========================================
+        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU'; // あなたのシートID
+        const GAS_URL  = 'https://script.google.com/macros/s/AKfycbzJpIoJCO_L6SZk1l72-a154BLa25iw4ybToKn85n58mOg5lRm06lGqcKnof8MG07U/exec'; // あなたのGAS URL
+        const SHEET_NAME = 'CountryData'; // タブ名
+        // ==========================================
 
-        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU';
-        const SHEET_NAME = 'CountryData'; 
-        
-        let countryData = {};
-        let currentCountry = ""; // ログイン中の国名
+        let db = {}; // データ保持用
+        let currentCountry = "";
 
-        // ↓↓↓ ここから書き換え ↓↓↓
+        // 起動時の処理
         window.onload = async function() {
             const btn = document.getElementById('btn-login');
+            const status = document.getElementById('login-status');
+            
             try {
-                // キャッシュ回避のためにタイムスタンプ(?t=...)を付与
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}&t=${new Date().getTime()}`;
+                // スプレッドシート読み込み (Visualization API)
+                // キャッシュ回避のタイムスタンプ付き
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}&t=${Date.now()}`;
                 
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("データ取得失敗: " + response.status);
+                const res = await fetch(url);
+                if(!res.ok) throw new Error("DB接続失敗");
                 
-                const text = await response.text();
-
-                // 【診断】もしHTML（ログイン画面など）が返ってきていたらアラートを出す
-                if (text.trim().startsWith("<")) {
-                    alert("【設定エラー】\nスプレッドシートのデータではなく、Googleのログイン画面が読み込まれています。\n\nスプレッドシートの「共有設定」を「リンクを知っている全員」に変更してください。");
-                    return;
+                const text = await res.text();
+                
+                // エラー判定（HTMLが返ってきている場合など）
+                if(text.trim().startsWith("<")) {
+                    throw new Error("共有設定エラー: シートを「リンクを知っている全員」にしてください");
                 }
 
-                // 【診断】データが空、またはヘッダーしかない場合
-                const rows = text.split(/\r?\n/);
-                if (rows.length <= 1) {
-                     alert("【データエラー】\nデータが読み込めませんでした。\nシート名（タブ名）が '" + SHEET_NAME + "' か確認してください。\nまた、A列に国名が入っているか確認してください。");
-                }
+                // CSV解析
+                parseCSV(text);
 
-                parseCSVVertical(text);
-                
-                // 成功時
+                // 準備完了
                 btn.disabled = false;
                 btn.innerText = "接続開始";
                 
-            } catch (error) {
-                console.error(error);
-                document.getElementById('login-status').innerText = "システムエラー: " + error.message;
+            } catch(e) {
+                console.error(e);
+                status.innerText = e.message;
             }
         };
-        // ↑↑↑ ここまで書き換え ↑↑↑
 
-        // CSV読み込み（1行目ヘッダー無視）
-        function parseCSVVertical(csvText) {
+        // CSVをパースしてプルダウンを作る
+        function parseCSV(csvText) {
             const rows = csvText.split(/\r?\n/);
-            const selectBox = document.getElementById('input-country');
-            
-            rows.forEach((row, index) => {
-                // indexが0（1行目）の場合はヘッダーなので無視する
-                if (index === 0) return;
+            const select = document.getElementById('login-country');
+            select.innerHTML = '<option value="">国家を選択してください</option>';
 
-                const cells = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
-                if (cells.length >= 2 && cells[0] !== "") {
-                    countryData[cells[0]] = cells[1]; 
-                    const option = document.createElement('option');
-                    option.value = cells[0];
-                    option.textContent = cells[0];
-                    selectBox.appendChild(option);
+            rows.forEach((row, i) => {
+                // 1行目(ヘッダー)は無視
+                if(i === 0) return;
+                
+                // カンマ区切り＆ダブルクォート除去
+                const cols = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                
+                // データがある行だけ処理 (A列=国名, B列=パス)
+                if(cols.length >= 2 && cols[0]) {
+                    db[cols[0]] = cols[1]; // メモリに保存
+                    
+                    const opt = document.createElement('option');
+                    opt.value = cols[0];
+                    opt.innerText = cols[0];
+                    select.appendChild(opt);
                 }
             });
         }
 
-        // ログイン処理
-        function attemptLogin() {
-            const selectedCountry = document.getElementById('input-country').value;
-            const inputPass = document.getElementById('input-password').value.trim();
-            const statusMsg = document.getElementById('login-status');
+        // ログイン実行
+        function execLogin() {
+            const country = document.getElementById('login-country').value;
+            const pass = document.getElementById('login-pass').value;
+            const status = document.getElementById('login-status');
 
-            if (!selectedCountry) {
-                statusMsg.innerText = "国家を選択してください。";
+            if(!country) {
+                status.innerText = "国家を選んでください";
                 return;
             }
 
-            if (countryData[selectedCountry] == inputPass) {
-                currentCountry = selectedCountry; // ログイン中の国を保存
-                const modal = document.getElementById('login-modal');
-                modal.style.opacity = '0';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    document.getElementById('main-content').style.display = 'block';
-                    document.getElementById('welcome-message').innerText = `ようこそ、${selectedCountry} 指導者様`;
-                }, 1000);
+            if(db[country] === pass) {
+                // 成功
+                currentCountry = country;
+                document.getElementById('login-modal').style.display = 'none'; // モーダル消去
+                document.getElementById('main-menu').style.display = 'block'; // メニュー表示
+                document.getElementById('welcome-msg').innerText = `ようこそ、${country} 指導者様`;
             } else {
-                statusMsg.innerText = "認証拒否: パスワードが一致しません。";
-                document.getElementById('input-password').value = "";
+                status.innerText = "パスワードが違います";
+                document.getElementById('login-pass').value = "";
             }
         }
 
-        // --- 設定（パスワード変更）関連 ---
-        function openSettings() {
-            document.getElementById('settings-modal').style.display = 'flex';
-            document.getElementById('new-password').value = "";
-            document.getElementById('confirm-password').value = "";
-            document.getElementById('settings-status').innerText = "";
+        // 設定モーダルの開閉
+        function toggleSettings(show) {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = show ? 'flex' : 'none';
+            if(show) {
+                // リセット
+                document.getElementById('new-pass').value = "";
+                document.getElementById('confirm-pass').value = "";
+                document.getElementById('setting-status').innerText = "";
+            }
         }
 
-        function closeSettings() {
-            document.getElementById('settings-modal').style.display = 'none';
-        }
-  
-// ★ここに手順2で確認したURLを貼ってください（URLが変わっている可能性があります！）
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9dY9JPgJ9zm3CZxoaRF3NrZvFpT_aljyDsp30i1aiPZ9fxhmYkPuJvU-Cy-nUgj-z/exec'; 
+        // パスワード変更実行
+        async function execChangePass() {
+            const newPass = document.getElementById('new-pass').value;
+            const confPass = document.getElementById('confirm-pass').value;
+            const status = document.getElementById('setting-status');
+            const btn = document.getElementById('btn-change');
 
-        // ... (中略) ...
-
-        async function changePassword() {
-            const newPass = document.getElementById('new-password').value;
-            const confirmPass = document.getElementById('confirm-password').value;
-            const statusMsg = document.getElementById('settings-status');
-
-            // 1. バリデーション
+            // バリデーション
             const regex = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
-
-            if (!newPass) {
-                statusMsg.innerText = "パスワードを入力してください。";
+            if(!newPass || !regex.test(newPass)) {
+                status.innerText = "使用できない文字が含まれています";
+                status.className = "status-msg";
                 return;
             }
-            if (!regex.test(newPass)) {
-                statusMsg.innerText = "使用できない文字が含まれています（英数字・日本語のみ可）。";
-                return;
-            }
-            if (newPass !== confirmPass) {
-                statusMsg.innerText = "確認用パスワードが一致しません。";
+            if(newPass !== confPass) {
+                status.innerText = "確認用パスワードが一致しません";
+                status.className = "status-msg";
                 return;
             }
 
-            // 2. GASへ送信（CORS対策版）
-            statusMsg.innerText = "通信中...";
-            statusMsg.style.color = "#aaa";
-            document.getElementById('btn-change-pass').disabled = true;
+            // 送信処理
+            status.innerText = "サーバー通信中...";
+            status.className = "status-msg";
+            btn.disabled = true;
 
             try {
-                // 【変更点】JSONではなく「フォームデータ」として送る
+                // フォームデータ形式で送信（CORS対策に強い）
                 const formData = new URLSearchParams();
                 formData.append('country', currentCountry);
                 formData.append('newPass', newPass);
 
-                // fetchの設定を変更
-                const response = await fetch(GAS_URL, {
+                const res = await fetch(GAS_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: formData
                 });
-
-                const result = await response.json();
                 
-                if (result.result === 'success') {
-                    statusMsg.style.color = "#4caf50";
-                    statusMsg.innerText = "変更完了。";
-                    countryData[currentCountry] = newPass;
-                    setTimeout(closeSettings, 2000);
+                const json = await res.json();
+
+                if(json.result === 'success') {
+                    status.innerText = "変更しました！次回から有効です";
+                    status.className = "status-msg ok-msg";
+                    db[currentCountry] = newPass; // ローカルも更新
+                    setTimeout(() => toggleSettings(false), 2000);
                 } else {
-                    throw new Error("更新失敗");
+                    throw new Error(json.message);
                 }
 
-            } catch (error) {
-                console.error(error);
-                // GAS特有の「成功しているのにCORSエラーが出る」場合の対策
-                // 実は書き込めていることが多いので、スプレッドシートを確認してもらう
-                statusMsg.style.color = "#ff6b6b";
-                statusMsg.innerText = "送信しました。（※エラー表示でも変更されている場合があります。一度リロードして確認してください）";
+            } catch(e) {
+                console.error(e);
+                status.innerText = "送信完了(確認中)... エラー表示でも変更されている可能性があります";
+                // GASは成功していても通信経路の問題でエラーに見えることがあるため、
+                // 致命的なエラー以外は「完了」扱いにする手もありますが、今回は正直に表示します
             } finally {
-                document.getElementById('btn-change-pass').disabled = false;
+                btn.disabled = false;
             }
         }
+    </script>
+</body>
+</html>
