@@ -252,6 +252,7 @@
             if(db[country] === pass) {
                 // 成功
                 currentCountry = country;
+                sessionStorage.setItem('loginCountry', country);
                 document.getElementById('login-modal').style.display = 'none'; // モーダル消去
                 document.getElementById('main-menu').style.display = 'block'; // メニュー表示
                 document.getElementById('welcome-msg').innerText = `ようこそ、${country} 指導者様`;
