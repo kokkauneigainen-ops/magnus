@@ -10,7 +10,7 @@
             margin: 0; padding: 0;
             font-family: "HiraMinProN-W3", "Hiragino Mincho ProN", serif;
             background-color: #111; color: #e0e0e0;
-            background-image: url('background.jpg'); /* 背景画像がある場合 */
+            background-image: url('back.jpg');
             background-size: cover; background-position: center; background-attachment: fixed;
             min-height: 100vh; display: flex; flex-direction: column;
         }
@@ -139,7 +139,7 @@
 
     <div class="overlay">
         <div class="admin-msg">
-            【運営より】現在、システムは正常に稼働しています。定期的なパスワード変更を推奨します。
+            【運営より】現在、開発途中です。㎰変更もできます。いろいろ試してみてください。
         </div>
 
         <div class="settings-bar">
@@ -147,7 +147,7 @@
         </div>
 
         <header>
-            <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+            <img src="stella.png" alt="Logo" class="logo" onerror="this.style.display='none'">
             <h1>国家運営処理システム<br>ステッラ</h1>
         </header>
 
@@ -171,13 +171,11 @@
     </div>
 
     <script>
-        // ==========================================
-        // 【重要】以下の2つを書き換えてください
-        // ==========================================
-        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU'; // あなたのシートID
-        const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwWG2Qs3cyDVX_3JseXmRepmDJzyWvPoNkhTwxu2wHUplUMEEUcsANtoMZ8u9dqw894/exec'; // あなたのGAS URL
+
+        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU'; // シートID
+        const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwWG2Qs3cyDVX_3JseXmRepmDJzyWvPoNkhTwxu2wHUplUMEEUcsANtoMZ8u9dqw894/exec'; // GAS URL
         const SHEET_NAME = 'CountryData'; // タブ名
-        // ==========================================
+
 
         let db = {}; // データ保持用
         let currentCountry = "";
