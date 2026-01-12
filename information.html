@@ -4,18 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>国家情報ページ</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* スマホで見やすくするためのスタイル設定 */
+        /* ダークモード＆明朝体＆シックなデザイン設定 */
         :root {
-            --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --bg-color: #f4f4f9;
-            --card-bg: #ffffff;
-            --text-color: #333;
+            --primary-color: #d4af37; /* シックなゴールド */
+            --accent-color: #c0a060;
+            --bg-color: #1a1a1a;    /* 深い黒 */
+            --card-bg: #2d2d2d;     /* 暗いグレー */
+            --text-color: #e0e0e0;  /* 明るいグレー */
+            --text-muted: #a0a0a0;
+            
+            /* グラフの色設定 */
+            --chart-red: rgba(231, 76, 60, 0.8);
+            --chart-blue: rgba(52, 152, 219, 0.8);
+            /* 円グラフ用の落ち着いた色パレット */
+            --chart-colors: [
+                'rgba(192, 57, 43, 0.7)', 'rgba(142, 68, 173, 0.7)', 'rgba(41, 128, 185, 0.7)',
+                'rgba(39, 174, 96, 0.7)', 'rgba(243, 156, 18, 0.7)', 'rgba(211, 84, 0, 0.7)',
+                'rgba(127, 140, 141, 0.7)'
+            ];
         }
 
         body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
+            /* 明朝体フォントスタック */
+            font-family: "Noto Serif JP", "Yu Mincho", YuMincho, "Hiragino Mincho ProN", serif;
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
@@ -30,7 +44,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #444;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -43,12 +57,14 @@
         }
 
         .logo {
-            height: 40px; /* ロゴの高さ調整 */
+            height: 40px;
             width: auto;
+            filter: brightness(0.8); /* ロゴも少し暗く馴染ませる */
         }
 
         h1 {
             font-size: 1.2rem;
+            font-weight: normal;
             margin: 0;
             color: var(--primary-color);
         }
@@ -59,88 +75,113 @@
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
             padding: 5px 12px;
-            border-radius: 20px;
+            border-radius: 2px; /* 角を少し鋭角に */
             text-decoration: none;
             font-size: 0.9rem;
             cursor: pointer;
+            font-family: inherit; /* ボタンも明朝体に */
+            transition: background-color 0.3s;
+        }
+        .back-btn:hover {
+            background-color: rgba(212, 175, 55, 0.2);
         }
 
         /* メインコンテンツ */
         main {
             padding: 20px;
-            max-width: 600px; /* PCで見ても広がりすぎないように */
+            max-width: 800px; /* グラフが入るので少し幅を広げる */
             margin: 0 auto;
         }
 
         /* 国名表示エリア */
         .country-title {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            margin-top: 10px;
         }
         .country-title h2 {
-            font-size: 1.8rem;
-            border-bottom: 3px solid var(--accent-color);
+            font-size: 2rem;
+            font-weight: normal;
+            border-bottom: 2px solid var(--accent-color);
             display: inline-block;
-            padding-bottom: 5px;
+            padding-bottom: 10px;
             margin: 0;
+            letter-spacing: 0.1em;
         }
 
         /* 情報カードのスタイル */
-        .info-card {
+        .info-card, .chart-container {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #444;
+            border-radius: 4px; /* シックな角丸 */
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         .section-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 15px;
-            border-left: 4px solid var(--accent-color);
-            padding-left: 10px;
+            font-size: 1.3rem;
+            font-weight: normal;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 0.05em;
         }
-
-        /* データリスト (dl, dt, dd) のグリッドレイアウト */
+        
+        /* リスト表示スタイル */
         .data-list {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 12px;
         }
-
         .data-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #555;
             padding-bottom: 8px;
         }
-
         .data-label {
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.95rem;
+            color: var(--text-muted);
         }
-
         .data-value {
-            font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.05rem;
             text-align: right;
         }
 
-        /* 読み込み中の表示 */
-        #loading {
-            text-align: center;
-            padding: 40px;
-            font-weight: bold;
-            color: #888;
+        /* グラフ用コンテナ（スマホでの高さ確保） */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            /* スマホで見やすいように高さをある程度確保 */
+            min-height: 300px; 
+        }
+        /* 世界比較グラフは国が多いと縦長になるので高さを増やす */
+        .chart-wrapper.world-comparison {
+            min-height: 500px;
         }
 
-        #content-area {
-            display: none; /* データ取得完了まで隠す */
+        /* 円グラフを横並びにするためのグリッド */
+        .pie-charts-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* スマホは縦並び */
+            gap: 20px;
         }
+        @media (min-width: 600px) {
+            .pie-charts-grid {
+                grid-template-columns: 1fr 1fr; /* PCは横並び */
+            }
+        }
+
+        /* 読み込み中 */
+        #loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        #content-area { display: none; }
     </style>
 </head>
 <body>
@@ -162,100 +203,231 @@
 
         <section class="info-card">
             <div class="section-title">基本情報</div>
-            <div class="data-list" id="basic-info-list">
-                </div>
+            <div class="data-list" id="basic-info-list"></div>
         </section>
 
         <section class="info-card">
             <div class="section-title">所持資源</div>
-            <div class="data-list" id="resource-info-list">
-                </div>
+            <div class="data-list" id="resource-info-list"></div>
         </section>
+
+        <section class="chart-container">
+            <div class="section-title">世界の国力差</div>
+            <div class="chart-wrapper world-comparison">
+                <canvas id="worldComparisonChart"></canvas>
+            </div>
+        </section>
+
+        <section class="chart-container">
+            <div class="section-title">財源・財政状況</div>
+            
+            <div style="margin-bottom: 40px;">
+                <div class="section-title" style="font-size: 1.1rem;">財政収支</div>
+                <div class="chart-wrapper" style="min-height: 250px;">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="pie-charts-grid">
+                <div>
+                    <div class="section-title" style="font-size: 1.1rem;">歳出の割合</div>
+                    <div class="chart-wrapper" style="min-height: 300px;">
+                        <canvas id="expenditurePieChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <div class="section-title" style="font-size: 1.1rem;">歳入の割合</div>
+                    <div class="chart-wrapper" style="min-height: 300px;">
+                        <canvas id="revenuePieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <script>
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWkKqBxqKcCguYIKLw5geYJCp14BBvgiOkc7a69uCdMRwAZWXZWc2VcecTlFoWQss0Iyu6yBZSOfnk/pub?gid=301877007&single=true&output=csv';
-        
-        // 取得したい列のインデックス定義 (A列=0, B列=1...)
-        const COLS_BASIC = [1, 2, 3, 4, 5, 12, 13, 16, 17, 18, 19]; // B,C,D,E,F,M,N,Q,R,S,T
-        const COLS_RESOURCE = [6, 7, 8, 9, 10]; // G,H,I,J,K
+
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWkKqBxqKcCguYIKLw5geYJCp14BBvgiOkc7a69uCdMRwAZWXZWc2VcecTlFoWQss0Iyu6yBZSOfnk/pubhtml?gid=301877007&single=true';
+
+        // 列インデックス定義 (0始まり)
+        const COLS = {
+            COUNTRY: 0, // A列
+            BASIC: [1, 2, 3, 4, 5, 12, 13, 16, 17, 18, 19], // B,C,D,E,F,M,N,Q,R,S,T
+            RESOURCE: [6, 7, 8, 9, 10], // G,H,I,J,K
+            // グラフ用データ
+            COMPARE_C: 2, COMP_D: 3, COMP_T: 19, // C, D, T列
+            REVENUE_PIE: [21, 22, 23, 24, 25], // V-Z列 (歳入内訳)
+            EXPEND_PIE: [26, 27, 28, 29, 30, 31, 32], // AA-AG列 (歳出内訳)
+            EXPEND_TOTAL: 34, // AI列 (歳出合計・赤)
+            REVENUE_TOTAL: 35 // AJ列 (歳入合計・青)
+        };
+
+        // Chart.jsの共通設定（ダークモード対応）
+        Chart.defaults.color = '#a0a0a0';
+        Chart.defaults.borderColor = '#444';
+        Chart.defaults.font.family = '"Noto Serif JP", "Yu Mincho", serif';
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. ログイン情報の確認
             const loginCountry = sessionStorage.getItem('loginCountry');
-            
             if (!loginCountry) {
-                alert('ログイン情報が見つかりません。トップページに戻ります。');
-                // window.location.href = 'index.html'; // 必要であればトップへリダイレクト
-                document.getElementById('display-country-name').textContent = "未ログイン";
-                document.getElementById('loading').style.display = 'none';
+                alert('ログイン情報が見つかりません。');
+                document.getElementById('loading').textContent = "ログインエラー";
                 return;
             }
-
             document.getElementById('display-country-name').textContent = loginCountry;
 
             try {
-                // 2. CSVデータを取得
                 const response = await fetch(SHEET_CSV_URL);
-                if (!response.ok) throw new Error("Network response was not ok");
+                if (!response.ok) throw new Error("Network response not ok");
                 const csvText = await response.text();
-
-                // 3. CSVをパース（配列に変換）する簡易関数
                 const rows = parseCSV(csvText);
-
-                // ヘッダー行（1行目）とデータ行を取得
-                const headers = rows[0]; 
+                const headers = rows[0];
+                // データ行のみ抽出（ヘッダー除外、A列が空でない行）
+                const dataRows = rows.slice(1).filter(row => row[COLS.COUNTRY] && row[COLS.COUNTRY].trim() !== '');
                 
-                // A列(index 0)が loginCountry と一致する行を探す
-                const targetRow = rows.find(row => row[0] === loginCountry);
+                // 自国のデータ行を探す
+                const targetRow = dataRows.find(row => row[COLS.COUNTRY] === loginCountry);
 
                 if (targetRow) {
-                    // 4. HTMLにデータを流し込む
-                    renderData('basic-info-list', headers, targetRow, COLS_BASIC);
-                    renderData('resource-info-list', headers, targetRow, COLS_RESOURCE);
+                    // リストデータの表示
+                    renderList('basic-info-list', headers, targetRow, COLS.BASIC);
+                    renderList('resource-info-list', headers, targetRow, COLS.RESOURCE);
+
+                    // グラフの描画開始
+                    drawWorldComparisonChart(headers, dataRows);
+                    drawFinanceChart(headers, targetRow);
+                    drawPieChart('expenditurePieChart', headers, targetRow, COLS.EXPEND_PIE);
+                    drawPieChart('revenuePieChart', headers, targetRow, COLS.REVENUE_PIE);
 
                     // 表示切り替え
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('content-area').style.display = 'block';
                 } else {
-                    document.getElementById('loading').textContent = `国データ「${loginCountry}」が見つかりませんでした。`;
+                    throw new Error(`「${loginCountry}」のデータが見つかりません。`);
                 }
 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('loading').textContent = 'データの取得に失敗しました。';
+                document.getElementById('loading').textContent = 'データ取得エラー: ' + error.message;
             }
         });
 
-        // データをHTMLリストとして生成する関数
-        function renderData(containerId, headers, rowData, colIndices) {
+        // --- 描画系関数 ---
+
+        // リスト描画関数
+        function renderList(containerId, headers, rowData, colIndices) {
             const container = document.getElementById(containerId);
             let html = '';
-
             colIndices.forEach(index => {
-                // 列が存在するかチェック
-                if (headers[index] !== undefined && rowData[index] !== undefined) {
-                    html += `
-                        <div class="data-item">
-                            <span class="data-label">${headers[index]}</span>
-                            <span class="data-value">${rowData[index]}</span>
-                        </div>
-                    `;
+                if (headers[index] && rowData[index] !== undefined) {
+                    html += `<div class="data-item"><span class="data-label">${headers[index]}</span><span class="data-value">${rowData[index]}</span></div>`;
                 }
             });
             container.innerHTML = html;
         }
 
-        // 簡易CSVパーサー（引用符内のカンマなども考慮する場合はライブラリ推奨だが、簡易版として実装）
-        function parseCSV(text) {
-            // 改行で行に分割し、空行を除去
-            const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
-            
-            return lines.map(line => {
-                // カンマで分割（注：データ内にカンマが含まれる場合は誤動作します。
-                // データ内にカンマがある場合は PapaParse などのライブラリを使ってください）
-                return line.split(',');
+        // ヘルパー：文字列を数値に変換（カンマ除去など）
+        const toNum = (str) => {
+            if(!str) return 0;
+            // カンマやスペースを除去して数値化。失敗したら0
+            const num = parseFloat(str.replace(/[, \s]/g, ''));
+            return isNaN(num) ? 0 : num;
+        };
+
+        // 1. 世界の国力差グラフ（横向き棒グラフ）
+        function drawWorldComparisonChart(headers, dataRows) {
+            const ctx = document.getElementById('worldComparisonChart').getContext('2d');
+            const labels = dataRows.map(row => row[COLS.COUNTRY]);
+            // データセットの作成（C, D, T列）
+            const datasets = [
+                { label: headers[COLS.COMPARE_C], data: dataRows.map(r => toNum(r[COLS.COMPARE_C])), backgroundColor: 'rgba(192, 57, 43, 0.7)' },
+                { label: headers[COLS.COMP_D],   data: dataRows.map(r => toNum(r[COLS.COMP_D])),   backgroundColor: 'rgba(41, 128, 185, 0.7)' },
+                { label: headers[COLS.COMP_T],   data: dataRows.map(r => toNum(r[COLS.COMP_T])),   backgroundColor: 'rgba(243, 156, 18, 0.7)' }
+            ];
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    indexAxis: 'y', // 横向き棒グラフにする（スマホで見やすい）
+                    responsive: true,
+                    maintainAspectRatio: false, // コンテナの高さに合わせる
+                    scales: { x: { stacked: true }, y: { stacked: true } }, // 積み上げグラフ
+                    plugins: { legend: { position: 'bottom' } } // 凡例を下に
+                }
             });
+        }
+
+        // 2. 財政グラフ（自国の歳入vs歳出）
+        function drawFinanceChart(headers, row) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            const expendVal = toNum(row[COLS.EXPEND_TOTAL]);
+            const revenueVal = toNum(row[COLS.REVENUE_TOTAL]);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [headers[COLS.EXPEND_TOTAL], headers[COLS.REVENUE_TOTAL]],
+                    datasets: [{
+                        data: [expendVal, revenueVal],
+                        backgroundColor: ['rgba(231, 76, 60, 0.8)', 'rgba(52, 152, 219, 0.8)'] // 赤と青
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } } // 凡例不要
+                }
+            });
+        }
+
+        // 3 & 4. 円グラフ描画の共通関数
+        function drawPieChart(canvasId, headers, row, colIndices) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            const labels = [];
+            const data = [];
+            colIndices.forEach(idx => {
+                labels.push(headers[idx]);
+                data.push(toNum(row[idx]));
+            });
+
+            // CSS変数から色の配列を取得（簡易的な方法）
+            const colorsStr = getComputedStyle(document.documentElement).getPropertyValue('--chart-colors').trim();
+            // 文字列 '[...]' を配列に変換する簡易処理
+            const bgColors = colorsStr.replace(/[\[\]']/g, '').split(',').map(c => c.trim());
+
+            new Chart(ctx, {
+                type: 'pie', // または 'doughnut'
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom', // スマホ向けに凡例を下に配置
+                            labels: { padding: 20 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 簡易CSVパーサー
+        function parseCSV(text) {
+            // 注: データ内にカンマが含まれる場合は正しく動作しません。
+            // 必要に応じて PapaParse などのライブラリの使用を検討してください。
+            return text.split(/\r\n|\n/)
+                       .filter(line => line.trim() !== '')
+                       .map(line => line.split(','));
         }
     </script>
 </body>
