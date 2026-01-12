@@ -15,16 +15,6 @@
             --card-bg: #2d2d2d;     /* 暗いグレー */
             --text-color: #e0e0e0;  /* 明るいグレー */
             --text-muted: #a0a0a0;
-            
-            /* グラフの色設定 */
-            --chart-red: rgba(231, 76, 60, 0.8);
-            --chart-blue: rgba(52, 152, 219, 0.8);
-            /* 円グラフ用の落ち着いた色パレット */
-            --chart-colors: [
-                'rgba(192, 57, 43, 0.7)', 'rgba(142, 68, 173, 0.7)', 'rgba(41, 128, 185, 0.7)',
-                'rgba(39, 174, 96, 0.7)', 'rgba(243, 156, 18, 0.7)', 'rgba(211, 84, 0, 0.7)',
-                'rgba(127, 140, 141, 0.7)'
-            ];
         }
 
         body {
@@ -75,11 +65,11 @@
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
             padding: 5px 12px;
-            border-radius: 2px; /* 角を少し鋭角に */
+            border-radius: 2px;
             text-decoration: none;
             font-size: 0.9rem;
             cursor: pointer;
-            font-family: inherit; /* ボタンも明朝体に */
+            font-family: inherit;
             transition: background-color 0.3s;
         }
         .back-btn:hover {
@@ -89,7 +79,7 @@
         /* メインコンテンツ */
         main {
             padding: 20px;
-            max-width: 800px; /* グラフが入るので少し幅を広げる */
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -113,7 +103,7 @@
         .info-card, .chart-container {
             background-color: var(--card-bg);
             border: 1px solid #444;
-            border-radius: 4px; /* シックな角丸 */
+            border-radius: 4px;
             padding: 25px;
             margin-bottom: 30px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -150,14 +140,12 @@
             text-align: right;
         }
 
-        /* グラフ用コンテナ（スマホでの高さ確保） */
+        /* グラフ用コンテナ */
         .chart-wrapper {
             position: relative;
             width: 100%;
-            /* スマホで見やすいように高さをある程度確保 */
             min-height: 300px; 
         }
-        /* 世界比較グラフは国が多いと縦長になるので高さを増やす */
         .chart-wrapper.world-comparison {
             min-height: 500px;
         }
@@ -165,12 +153,12 @@
         /* 円グラフを横並びにするためのグリッド */
         .pie-charts-grid {
             display: grid;
-            grid-template-columns: 1fr; /* スマホは縦並び */
+            grid-template-columns: 1fr;
             gap: 20px;
         }
         @media (min-width: 600px) {
             .pie-charts-grid {
-                grid-template-columns: 1fr 1fr; /* PCは横並び */
+                grid-template-columns: 1fr 1fr;
             }
         }
 
@@ -188,7 +176,7 @@
 
     <header>
         <div class="header-left">
-            <img src="stella.png" alt="Stella Logo" class="logo">
+            <img src="Stella.png" alt="Stella Logo" class="logo">
             <h1>国家情報ページ</h1>
         </div>
         <button class="back-btn" onclick="window.history.back()">戻る</button>
@@ -252,18 +240,18 @@
 
         // 列インデックス定義 (0始まり)
         const COLS = {
-            COUNTRY: 0, // A列
-            BASIC: [1, 2, 3, 4, 5, 12, 13, 16, 17, 18, 19], // B,C,D,E,F,M,N,Q,R,S,T
-            RESOURCE: [6, 7, 8, 9, 10], // G,H,I,J,K
+            COUNTRY: 0, 
+            BASIC: [1, 2, 3, 4, 5, 12, 13, 16, 17, 18, 19],
+            RESOURCE: [6, 7, 8, 9, 10],
             // グラフ用データ
-            COMPARE_C: 2, COMP_D: 3, COMP_T: 19, // C, D, T列
-            REVENUE_PIE: [21, 22, 23, 24, 25], // V-Z列 (歳入内訳)
-            EXPEND_PIE: [26, 27, 28, 29, 30, 31, 32], // AA-AG列 (歳出内訳)
-            EXPEND_TOTAL: 34, // AI列 (歳出合計・赤)
-            REVENUE_TOTAL: 35 // AJ列 (歳入合計・青)
+            COMPARE_C: 2, COMP_D: 3, COMP_T: 19,
+            REVENUE_PIE: [21, 22, 23, 24, 25], // V-Z
+            EXPEND_PIE: [26, 27, 28, 29, 30, 31, 32], // AA-AG
+            EXPEND_TOTAL: 34, // AI
+            REVENUE_TOTAL: 35 // AJ
         };
 
-        // Chart.jsの共通設定（ダークモード対応）
+        // Chart.js共通設定
         Chart.defaults.color = '#a0a0a0';
         Chart.defaults.borderColor = '#444';
         Chart.defaults.font.family = '"Noto Serif JP", "Yu Mincho", serif';
@@ -283,24 +271,19 @@
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
                 const headers = rows[0];
-                // データ行のみ抽出（ヘッダー除外、A列が空でない行）
                 const dataRows = rows.slice(1).filter(row => row[COLS.COUNTRY] && row[COLS.COUNTRY].trim() !== '');
                 
-                // 自国のデータ行を探す
                 const targetRow = dataRows.find(row => row[COLS.COUNTRY] === loginCountry);
 
                 if (targetRow) {
-                    // リストデータの表示
                     renderList('basic-info-list', headers, targetRow, COLS.BASIC);
                     renderList('resource-info-list', headers, targetRow, COLS.RESOURCE);
 
-                    // グラフの描画開始
                     drawWorldComparisonChart(headers, dataRows);
                     drawFinanceChart(headers, targetRow);
                     drawPieChart('expenditurePieChart', headers, targetRow, COLS.EXPEND_PIE);
                     drawPieChart('revenuePieChart', headers, targetRow, COLS.REVENUE_PIE);
 
-                    // 表示切り替え
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('content-area').style.display = 'block';
                 } else {
@@ -313,9 +296,7 @@
             }
         });
 
-        // --- 描画系関数 ---
-
-        // リスト描画関数
+        // リスト描画
         function renderList(containerId, headers, rowData, colIndices) {
             const container = document.getElementById(containerId);
             let html = '';
@@ -327,39 +308,37 @@
             container.innerHTML = html;
         }
 
-        // ヘルパー：文字列を数値に変換（カンマ除去など）
         const toNum = (str) => {
             if(!str) return 0;
-            // カンマやスペースを除去して数値化。失敗したら0
             const num = parseFloat(str.replace(/[, \s]/g, ''));
             return isNaN(num) ? 0 : num;
         };
 
-        // 1. 世界の国力差グラフ（横向き棒グラフ）
+        // 1. 世界の国力差グラフ
         function drawWorldComparisonChart(headers, dataRows) {
             const ctx = document.getElementById('worldComparisonChart').getContext('2d');
             const labels = dataRows.map(row => row[COLS.COUNTRY]);
-            // データセットの作成（C, D, T列）
+            
             const datasets = [
-                { label: headers[COLS.COMPARE_C], data: dataRows.map(r => toNum(r[COLS.COMPARE_C])), backgroundColor: 'rgba(192, 57, 43, 0.7)' },
-                { label: headers[COLS.COMP_D],   data: dataRows.map(r => toNum(r[COLS.COMP_D])),   backgroundColor: 'rgba(41, 128, 185, 0.7)' },
-                { label: headers[COLS.COMP_T],   data: dataRows.map(r => toNum(r[COLS.COMP_T])),   backgroundColor: 'rgba(243, 156, 18, 0.7)' }
+                { label: headers[COLS.COMPARE_C], data: dataRows.map(r => toNum(r[COLS.COMPARE_C])), backgroundColor: '#c0392b' }, // 深い赤
+                { label: headers[COLS.COMP_D],   data: dataRows.map(r => toNum(r[COLS.COMP_D])),   backgroundColor: '#2980b9' }, // 落ち着いた青
+                { label: headers[COLS.COMP_T],   data: dataRows.map(r => toNum(r[COLS.COMP_T])),   backgroundColor: '#f39c12' }  // 落ち着いたオレンジ
             ];
 
             new Chart(ctx, {
                 type: 'bar',
                 data: { labels, datasets },
                 options: {
-                    indexAxis: 'y', // 横向き棒グラフにする（スマホで見やすい）
+                    indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: false, // コンテナの高さに合わせる
-                    scales: { x: { stacked: true }, y: { stacked: true } }, // 積み上げグラフ
-                    plugins: { legend: { position: 'bottom' } } // 凡例を下に
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true } },
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
 
-        // 2. 財政グラフ（自国の歳入vs歳出）
+        // 2. 財政グラフ
         function drawFinanceChart(headers, row) {
             const ctx = document.getElementById('financeChart').getContext('2d');
             const expendVal = toNum(row[COLS.EXPEND_TOTAL]);
@@ -371,18 +350,18 @@
                     labels: [headers[COLS.EXPEND_TOTAL], headers[COLS.REVENUE_TOTAL]],
                     datasets: [{
                         data: [expendVal, revenueVal],
-                        backgroundColor: ['rgba(231, 76, 60, 0.8)', 'rgba(52, 152, 219, 0.8)'] // 赤と青
+                        backgroundColor: ['#e74c3c', '#3498db'] // 赤, 青
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } } // 凡例不要
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
-        // 3 & 4. 円グラフ描画の共通関数
+        // 3 & 4. 円グラフ（ここを修正：色指定をJS内に直接記述）
         function drawPieChart(canvasId, headers, row, colIndices) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             
@@ -393,19 +372,27 @@
                 data.push(toNum(row[idx]));
             });
 
-            // CSS変数から色の配列を取得（簡易的な方法）
-            const colorsStr = getComputedStyle(document.documentElement).getPropertyValue('--chart-colors').trim();
-            // 文字列 '[...]' を配列に変換する簡易処理
-            const bgColors = colorsStr.replace(/[\[\]']/g, '').split(',').map(c => c.trim());
+            // 修正：ここにパレットを直接定義（ダークモードに合うシックな色）
+            const palette = [
+                '#c0392b', // 深紅
+                '#8e44ad', // 紫
+                '#2980b9', // 青
+                '#16a085', // 青緑
+                '#d35400', // テラコッタ
+                '#f39c12', // 黄土色
+                '#7f8c8d', // スレートグレイ
+                '#27ae60'  // 緑
+            ];
 
             new Chart(ctx, {
-                type: 'pie', // または 'doughnut'
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: data,
-                        backgroundColor: bgColors,
-                        borderWidth: 1
+                        backgroundColor: palette,
+                        borderColor: '#2d2d2d', // 境界線を背景色に合わせて隙間を作る
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -413,18 +400,15 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom', // スマホ向けに凡例を下に配置
-                            labels: { padding: 20 }
+                            position: 'bottom',
+                            labels: { padding: 20, color: '#e0e0e0' }
                         }
                     }
                 }
             });
         }
 
-        // 簡易CSVパーサー
         function parseCSV(text) {
-            // 注: データ内にカンマが含まれる場合は正しく動作しません。
-            // 必要に応じて PapaParse などのライブラリの使用を検討してください。
             return text.split(/\r\n|\n/)
                        .filter(line => line.trim() !== '')
                        .map(line => line.split(','));
