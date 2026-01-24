@@ -8,9 +8,10 @@
         :root {
             --bg-dark: rgba(20, 20, 30, 0.95);
             --card-bg: #1e1e24;
-            --accent: #ff9800; /* 貿易っぽいオレンジ */
+            --accent: #ff9800; 
             --green: #4caf50;
             --red: #f44336;
+            --blue: #2196f3;
             --text: #e0e0e0;
             --border: #444;
         }
@@ -22,10 +23,9 @@
             background-size: cover;
             color: var(--text);
             min-height: 100vh;
-            padding-bottom: 80px; /* FAB用スペース */
+            padding-bottom: 80px;
         }
 
-        /* ヘッダー */
         header {
             background: var(--bg-dark);
             padding: 10px 15px;
@@ -33,26 +33,16 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 2px solid var(--accent);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
         }
-
         .header-left { display: flex; align-items: center; }
         .back-btn {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 5px 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            margin-right: 15px;
+            background: transparent; border: 1px solid var(--accent);
+            color: var(--accent); padding: 5px 10px; border-radius: 5px;
+            text-decoration: none; font-size: 0.8rem; margin-right: 15px;
         }
         header h1 { font-size: 1rem; margin: 0; }
-        .resource-status { font-size: 0.7rem; color: #aaa; margin-top: 5px;}
 
-        /* カードデザイン */
         .container { max-width: 800px; margin: 20px auto; padding: 10px; }
         
         .trade-card {
@@ -63,102 +53,71 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            position: relative;
         }
 
-        /* ステータス別の色 */
-        .status-未選択 { border-left-color: #ffd700; } /* 黄色 */
+        .status-未選択 { border-left-color: #ffd700; }
         .status-認可 { border-left-color: var(--green); }
         .status-拒否 { border-left-color: var(--red); opacity: 0.7; }
 
+        .type-badge {
+            padding: 2px 6px; border-radius: 4px;
+            font-weight: bold; font-size: 0.7rem; color: #000;
+            background: #ccc;
+        }
+        .type-建設 { background: var(--accent); }
+        .type-交換 { background: var(--green); }
+        .type-価格変更 { background: var(--blue); color: white; }
+
         .card-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between;
+            font-size: 0.8rem; color: #aaa;
+            margin-bottom: 10px; border-bottom: 1px solid #333;
             padding-bottom: 5px;
         }
 
-        .trade-type-badge {
-            background: var(--accent);
-            color: #000;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.7rem;
-        }
-
         .trade-details {
-            display: flex;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-size: 0.9rem;
+            display: flex; justify-content: space-between;
+            background: rgba(0,0,0,0.2); padding: 10px;
+            border-radius: 5px; margin: 10px 0; font-size: 0.9rem;
         }
-        
         .trade-arrow { font-weight: bold; color: var(--accent); align-self: center;}
-        
         .detail-box { text-align: center; width: 45%; }
-        .detail-label { font-size: 0.7rem; color: #888; display: block; }
         .detail-val { font-weight: bold; color: white; }
+        .detail-label { font-size: 0.7rem; color: #888; display: block; }
 
         .card-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            border-top: 1px solid #333;
-            padding-top: 10px;
+            display: flex; gap: 10px; margin-top: 15px;
+            border-top: 1px solid #333; padding-top: 10px;
         }
-
         .btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
+            flex: 1; padding: 10px; border: none; border-radius: 5px;
+            font-weight: bold; cursor: pointer; color: white;
         }
         .btn-approve { background: var(--green); }
         .btn-reject { background: var(--red); }
         .btn-disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
 
-        /* FAB */
         .fab {
             position: fixed; right: 20px; bottom: 20px;
-            width: 60px; height: 60px;
-            background: var(--accent);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: white;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            border: none; z-index: 500;
+            width: 60px; height: 60px; background: var(--accent);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 30px; color: white; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: none; z-index: 500;
         }
 
-        /* モーダル */
         #modal {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 1000;
-            overflow-y: auto;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;
         }
         .modal-content {
-            background: #222;
-            width: 90%; max-width: 500px;
-            margin: 20px auto; padding: 20px;
-            border-radius: 10px; position: relative;
+            background: #222; width: 90%; max-width: 500px;
+            margin: 20px auto; padding: 20px; border-radius: 10px; position: relative;
         }
         .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%; margin: 5px 0 15px 0; padding: 10px;
             background: #333; border: 1px solid var(--border);
             color: white; box-sizing: border-box;
         }
-        label { font-size: 0.8rem; color: var(--accent); }
-        
         .limit-alert { color: var(--red); font-size: 0.8rem; display: none; }
     </style>
 </head>
@@ -183,50 +142,52 @@
 <div id="modal">
     <div class="modal-content">
         <span style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px;" onclick="toggleModal(false)">×</span>
-        <h3>新規貿易申請</h3>
+        <h3>新規貿易・変更申請</h3>
 
         <label>宛先国</label>
         <select id="toCountry"></select>
 
         <label>取引種別</label>
-        <select id="tradeType">
+        <select id="tradeType" onchange="updateFormLabels()">
             <option value="交易路建設">交易路建設</option>
             <option value="一時的交換">一時的交換</option>
-            <option value="価格変更">価格変更</option>
+            <option value="価格変更">価格変更（既存ルートの修正）</option>
         </select>
 
         <div style="display:flex; gap:10px;">
             <div style="flex:1;">
-                <label>提示(あげる)</label>
-                <select id="offerItem" onchange="checkLimit()">
-                    </select>
+                <label id="lbl-offer">提示(あげる)</label>
+                <select id="offerItem" onchange="checkLimit()"></select>
                 <input type="number" id="offerQty" placeholder="数量" oninput="checkLimit()">
                 <div id="limit-msg" class="limit-alert">保有上限を超えています！</div>
             </div>
             <div style="flex:1;">
-                <label>要求(もらう)</label>
-                <select id="reqItem">
-                    </select>
+                <label id="lbl-req">要求(もらう)</label>
+                <select id="reqItem"></select>
                 <input type="number" id="reqQty" placeholder="数量">
             </div>
         </div>
 
         <label>件名</label>
-        <input type="text" id="tradeTitle" placeholder="取引の要件">
+        <input type="text" id="tradeTitle" placeholder="例: 鉄と食糧の交換レート変更">
         
         <label>詳細・備考</label>
-        <textarea id="tradeBody" rows="4"></textarea>
+        <textarea id="tradeBody" rows="4" placeholder="詳細を記入してください"></textarea>
 
         <button class="btn btn-approve" id="send-btn" onclick="sendTrade()">申請を送る</button>
     </div>
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwXxJCNjLAQbFq5swm7L_-tLmra9lgAlOSLeUq_B1LfhxqDhWwrV9uQ7nCdzajbdgcwEg/exec';
+
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcPOvyT6xgC2L2WMKq3OiVoKT0WdI4TC_8i5MHpcPvI51gXSKIfsyBAJwGUmF5u8eAbg/exec';
     
     const myCountry = sessionStorage.getItem('loginCountry') || '未ログイン';
-    const resourcesList = ['自国通貨', '金属資源', '鉱山資源', '食糧資源', '民需資源', '軍需資源'];
-    let myResourceData = {}; // 保有量データ
+    
+    // ★修正: 燃料資源を追加しました
+    const resourcesList = ['自国通貨', '金属資源', '鉱山資源', '食糧資源', '燃料資源', '民需資源', '軍需資源'];
+    
+    let myResourceData = {};
 
     window.onload = () => {
         document.getElementById('country-display').innerText = myCountry;
@@ -235,33 +196,47 @@
     };
 
     function initForm() {
-        // 資源セレクトボックスの生成
         const opts = resourcesList.map(r => `<option value="${r}">${r}</option>`).join('');
         document.getElementById('offerItem').innerHTML = opts;
         document.getElementById('reqItem').innerHTML = opts;
     }
 
-    function toggleModal(show) {
-        document.getElementById('modal').style.display = show ? 'block' : 'none';
+    // 種別によってラベルを変える（UX向上のため）
+    function updateFormLabels() {
+        const type = document.getElementById('tradeType').value;
+        const lblOffer = document.getElementById('lbl-offer');
+        const lblReq = document.getElementById('lbl-req');
+
+        if (type.includes('価格変更')) {
+            lblOffer.innerText = "新:提示量 (あなたの支出)";
+            lblReq.innerText = "新:要求量 (相手の支出)";
+            // 価格変更の場合は、保有量チェックを厳密にする必要がない場合もありますが、
+            // 「変更後の量」を払えるかどうかのチェックとして残します。
+        } else {
+            lblOffer.innerText = "提示 (あげる)";
+            lblReq.innerText = "要求 (もらう)";
+        }
     }
 
-    // データ取得
+    function toggleModal(show) {
+        document.getElementById('modal').style.display = show ? 'block' : 'none';
+        if(show) updateFormLabels();
+    }
+
     async function fetchTrades() {
         try {
             const res = await fetch(`${GAS_URL}?country=${encodeURIComponent(myCountry.trim())}`);
             const data = await res.json();
             
-            myResourceData = data.resources; // 自分の資源上限を保存
+            myResourceData = data.resources; 
             renderTrades(data.trades);
             renderCountrySelect(data.countries);
-
         } catch (e) {
             console.error(e);
             document.getElementById('trade-list').innerText = '読み込みエラー';
         }
     }
 
-    // 貿易リスト描画
     function renderTrades(trades) {
         const container = document.getElementById('trade-list');
         container.innerHTML = '';
@@ -272,15 +247,21 @@
         }
 
         trades.forEach(t => {
-            const isReceiver = (t.receiver === myCountry); // 自分が受信側か
+            const isReceiver = (t.receiver === myCountry); 
             const isPending = (t.status === '未選択');
 
-            // カード生成
+            // 種別ごとのバッジスタイル設定
+            let typeClass = 'type-建設';
+            if (t.type.includes('交換')) typeClass = 'type-交換';
+            if (t.type.includes('価格変更')) typeClass = 'type-価格変更';
+
+            // 種別名のみ表示（（既存ルートの修正）などを消す）
+            const displayType = t.type.split('（')[0];
+
             const div = document.createElement('div');
             div.className = `trade-card status-${t.status}`;
             
             let actions = '';
-            // 受信側 かつ 未選択の場合のみ、ボタンを表示
             if (isReceiver && isPending) {
                 actions = `
                     <div class="card-actions">
@@ -295,7 +276,7 @@
             div.innerHTML = `
                 <div class="card-header">
                     <span>${t.date}</span>
-                    <span class="trade-type-badge">${t.type}</span>
+                    <span class="type-badge ${typeClass}">${displayType}</span>
                 </div>
                 <div style="font-weight:bold; margin-bottom:5px;">${t.title}</div>
                 <div style="font-size:0.8rem; color:#ccc;">From: ${t.sender} → To: ${t.receiver}</div>
@@ -332,7 +313,6 @@
         });
     }
 
-    // 上限チェック
     function checkLimit() {
         const item = document.getElementById('offerItem').value;
         const qty = parseFloat(document.getElementById('offerQty').value) || 0;
@@ -353,7 +333,6 @@
         }
     }
 
-    // 申請送信
     async function sendTrade() {
         const receiver = document.getElementById('toCountry').value;
         const type = document.getElementById('tradeType').value;
@@ -365,8 +344,6 @@
         const body = document.getElementById('tradeBody').value;
 
         if (!title || !offerQty || !reqQty) return alert('必須項目を入力してください');
-
-        // 再度バリデーション
         if (parseFloat(offerQty) > (myResourceData[offerItem] || 0)) {
             return alert('保有資源の上限を超えています');
         }
@@ -404,7 +381,6 @@
         }
     }
 
-    // ステータス更新（認可・拒否）
     async function updateStatus(id, newStatus) {
         if (!confirm(`この取引を「${newStatus}」しますか？`)) return;
 
@@ -418,7 +394,7 @@
                 })
             });
             alert('更新しました');
-            fetchTrades(); // リロード
+            fetchTrades();
         } catch(e) {
             alert('更新失敗');
         }
