@@ -105,6 +105,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: none; z-index: 500;
         }
 
+        /* モーダル */
         #modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 1000; overflow-y: auto;
@@ -119,6 +120,9 @@
             color: white; box-sizing: border-box;
         }
         .limit-alert { color: var(--red); font-size: 0.8rem; display: none; }
+        
+        /* 特定のフィールドを隠すクラス */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -144,15 +148,22 @@
         <span style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px;" onclick="toggleModal(false)">×</span>
         <h3>新規貿易・変更申請</h3>
 
-        <label>宛先国</label>
-        <select id="toCountry"></select>
-
         <label>取引種別</label>
-        <select id="tradeType" onchange="updateFormLabels()">
+        <select id="tradeType" onchange="handleTypeChange()">
             <option value="交易路建設">交易路建設</option>
             <option value="一時的交換">一時的交換</option>
             <option value="価格変更">価格変更（既存ルートの修正）</option>
         </select>
+
+        <div id="routeSelectContainer" class="hidden">
+            <label style="color:var(--blue);">対象の交易路を選択</label>
+            <select id="targetRoute" onchange="fillRouteData()">
+                <option value="">選択してください</option>
+            </select>
+        </div>
+
+        <label>宛先国</label>
+        <select id="toCountry"></select>
 
         <div style="display:flex; gap:10px;">
             <div style="flex:1;">
@@ -169,7 +180,7 @@
         </div>
 
         <label>件名</label>
-        <input type="text" id="tradeTitle" placeholder="例: 鉄と食糧の交換レート変更">
+        <input type="text" id="tradeTitle" placeholder="取引の要件">
         
         <label>詳細・備考</label>
         <textarea id="tradeBody" rows="4" placeholder="詳細を記入してください"></textarea>
@@ -179,15 +190,13 @@
 </div>
 
 <script>
-
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcPOvyT6xgC2L2WMKq3OiVoKT0WdI4TC_8i5MHpcPvI51gXSKIfsyBAJwGUmF5u8eAbg/exec';
-    
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwFnx8OaW4o0K0vr1mYP9XppkpPaQ33kRkziMMS4W4ITWsHEeKC3WkkUYA67ch5-H3k2Q/exec';
     const myCountry = sessionStorage.getItem('loginCountry') || '未ログイン';
     
-    // ★修正: 燃料資源を追加しました
     const resourcesList = ['自国通貨', '金属資源', '鉱山資源', '食糧資源', '燃料資源', '民需資源', '軍需資源'];
     
     let myResourceData = {};
+    let activeRoutesData = []; // 価格変更用に保持するリスト
 
     window.onload = () => {
         document.getElementById('country-display').innerText = myCountry;
@@ -201,26 +210,103 @@
         document.getElementById('reqItem').innerHTML = opts;
     }
 
-    // 種別によってラベルを変える（UX向上のため）
-    function updateFormLabels() {
+    // 種別変更時の制御
+    function handleTypeChange() {
         const type = document.getElementById('tradeType').value;
+        const routeContainer = document.getElementById('routeSelectContainer');
+        const toCountrySelect = document.getElementById('toCountry');
         const lblOffer = document.getElementById('lbl-offer');
         const lblReq = document.getElementById('lbl-req');
 
-        if (type.includes('価格変更')) {
+        if (type === '価格変更') {
+            routeContainer.classList.remove('hidden');
+            toCountrySelect.disabled = true; // 相手は自動選択されるのでロック
             lblOffer.innerText = "新:提示量 (あなたの支出)";
             lblReq.innerText = "新:要求量 (相手の支出)";
-            // 価格変更の場合は、保有量チェックを厳密にする必要がない場合もありますが、
-            // 「変更後の量」を払えるかどうかのチェックとして残します。
+            
+            // ルート一覧を更新（まだロードされてない可能性も考慮）
+            updateRouteSelectOptions();
         } else {
+            routeContainer.classList.add('hidden');
+            toCountrySelect.disabled = false;
+            toCountrySelect.value = toCountrySelect.options[0]?.value || ""; // リセット
             lblOffer.innerText = "提示 (あげる)";
             lblReq.innerText = "要求 (もらう)";
         }
     }
 
+    // ルート選択肢の生成
+    function updateRouteSelectOptions() {
+        const select = document.getElementById('targetRoute');
+        // 初期化（先頭以外削除）
+        select.innerHTML = '<option value="">選択してください</option>';
+
+        if (activeRoutesData.length === 0) {
+            const opt = document.createElement('option');
+            opt.text = "変更可能な交易路がありません";
+            select.appendChild(opt);
+            return;
+        }
+
+        activeRoutesData.forEach(route => {
+            // 相手国を判定
+            const partner = (route.sender === myCountry) ? route.receiver : route.sender;
+            
+            // 表示名: [相手国] 自分が出すもの -> 相手が出すもの
+            // 注意: データ上のsenderが自分とは限らないので、視点を自分に合わせて表示を調整
+            let myGiveItem, myGiveQty, myGetItem, myGetQty;
+            
+            if (route.sender === myCountry) {
+                myGiveItem = route.offerItem; myGiveQty = route.offerQty;
+                myGetItem = route.reqItem; myGetQty = route.reqQty;
+            } else {
+                // 自分が受信側だった場合、データ上のOfferは「もらうもの」、Reqは「あげるもの」
+                myGiveItem = route.reqItem; myGiveQty = route.reqQty;
+                myGetItem = route.offerItem; myGetQty = route.offerQty;
+            }
+
+            const opt = document.createElement('option');
+            opt.value = JSON.stringify(route); // データを丸ごとvalueに入れる
+            opt.textContent = `対${partner}: ${myGiveItem}(${myGiveQty}) ➡ ${myGetItem}(${myGetQty})`;
+            select.appendChild(opt);
+        });
+    }
+
+    // 既存ルート選択時にフォームを自動入力
+    function fillRouteData() {
+        const val = document.getElementById('targetRoute').value;
+        if (!val) return;
+
+        const route = JSON.parse(val);
+        const partner = (route.sender === myCountry) ? route.receiver : route.sender;
+
+        // 宛先国をセット
+        document.getElementById('toCountry').value = partner;
+
+        // 資源の種類をセット（数量は変更するものなので、あえて空にするか、今の値を入れるか）
+        // ここでは「現在の設定」をデフォルト値として入れます
+        if (route.sender === myCountry) {
+            document.getElementById('offerItem').value = route.offerItem;
+            document.getElementById('offerQty').value = route.offerQty;
+            document.getElementById('reqItem').value = route.reqItem;
+            document.getElementById('reqQty').value = route.reqQty;
+        } else {
+            // 自分が受信者だった場合、立場が逆転するので入れ替えてセット
+            document.getElementById('offerItem').value = route.reqItem;
+            document.getElementById('offerQty').value = route.reqQty;
+            document.getElementById('reqItem').value = route.offerItem;
+            document.getElementById('reqQty').value = route.offerQty;
+        }
+        
+        // タイトルに自動入力
+        document.getElementById('tradeTitle').value = `価格変更: ${partner}との交易路`;
+        
+        checkLimit(); // バリデーション実行
+    }
+
     function toggleModal(show) {
         document.getElementById('modal').style.display = show ? 'block' : 'none';
-        if(show) updateFormLabels();
+        if(show) handleTypeChange(); // 表示時にUI状態を更新
     }
 
     async function fetchTrades() {
@@ -229,6 +315,8 @@
             const data = await res.json();
             
             myResourceData = data.resources; 
+            activeRoutesData = data.activeRoutes; // 価格変更用データを保存
+            
             renderTrades(data.trades);
             renderCountrySelect(data.countries);
         } catch (e) {
@@ -237,6 +325,7 @@
         }
     }
 
+    // （renderTradesは前回と同じなので省略なしで記述します）
     function renderTrades(trades) {
         const container = document.getElementById('trade-list');
         container.innerHTML = '';
@@ -249,13 +338,9 @@
         trades.forEach(t => {
             const isReceiver = (t.receiver === myCountry); 
             const isPending = (t.status === '未選択');
-
-            // 種別ごとのバッジスタイル設定
             let typeClass = 'type-建設';
             if (t.type.includes('交換')) typeClass = 'type-交換';
             if (t.type.includes('価格変更')) typeClass = 'type-価格変更';
-
-            // 種別名のみ表示（（既存ルートの修正）などを消す）
             const displayType = t.type.split('（')[0];
 
             const div = document.createElement('div');
@@ -280,7 +365,6 @@
                 </div>
                 <div style="font-weight:bold; margin-bottom:5px;">${t.title}</div>
                 <div style="font-size:0.8rem; color:#ccc;">From: ${t.sender} → To: ${t.receiver}</div>
-                
                 <div class="trade-details">
                     <div class="detail-box">
                         <span class="detail-label">提示</span>
@@ -292,7 +376,6 @@
                         <div class="detail-val">${t.reqItem}<br>${t.reqQty}</div>
                     </div>
                 </div>
-                
                 <div style="white-space:pre-wrap; font-size:0.9rem;">${t.body}</div>
                 ${actions}
             `;
@@ -317,7 +400,6 @@
         const item = document.getElementById('offerItem').value;
         const qty = parseFloat(document.getElementById('offerQty').value) || 0;
         const limit = myResourceData[item] || 0;
-        
         const msg = document.getElementById('limit-msg');
         const btn = document.getElementById('send-btn');
 
@@ -341,12 +423,22 @@
         const reqItem = document.getElementById('reqItem').value;
         const reqQty = document.getElementById('reqQty').value;
         const title = document.getElementById('tradeTitle').value;
-        const body = document.getElementById('tradeBody').value;
+        
+        // 価格変更の場合、元のルートIDを本文などに含める工夫
+        let body = document.getElementById('tradeBody').value;
+        if (type === '価格変更') {
+            const routeVal = document.getElementById('targetRoute').value;
+            if (routeVal) {
+                const originalRoute = JSON.parse(routeVal);
+                // 本文の末尾に自動的に追記（管理用）
+                body += `\n\n[システム参照用: 元の交易路ID = ${originalRoute.id}]`;
+            } else {
+                return alert("変更する交易路を選択してください");
+            }
+        }
 
         if (!title || !offerQty || !reqQty) return alert('必須項目を入力してください');
-        if (parseFloat(offerQty) > (myResourceData[offerItem] || 0)) {
-            return alert('保有資源の上限を超えています');
-        }
+        if (parseFloat(offerQty) > (myResourceData[offerItem] || 0)) return alert('保有資源の上限を超えています');
 
         const payload = {
             action: 'create',
@@ -383,15 +475,10 @@
 
     async function updateStatus(id, newStatus) {
         if (!confirm(`この取引を「${newStatus}」しますか？`)) return;
-
         try {
             await fetch(GAS_URL, {
                 method: 'POST',
-                body: JSON.stringify({
-                    action: 'update',
-                    id: id,
-                    status: newStatus
-                })
+                body: JSON.stringify({ action: 'update', id: id, status: newStatus })
             });
             alert('更新しました');
             fetchTrades();
@@ -401,5 +488,7 @@
     }
 </script>
 
+</body>
+</html>
 </body>
 </html>
