@@ -221,8 +221,8 @@
         if (type === '価格変更') {
             routeContainer.classList.remove('hidden');
             toCountrySelect.disabled = true; // 相手は自動選択されるのでロック
-            lblOffer.innerText = "新:提示量 (あなたの支出)";
-            lblReq.innerText = "新:要求量 (相手の支出)";
+            lblOffer.innerText = "新:提示量";
+            lblReq.innerText = "新:要求量";
             
             // ルート一覧を更新（まだロードされてない可能性も考慮）
             updateRouteSelectOptions();
