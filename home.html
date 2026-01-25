@@ -10,12 +10,12 @@
             margin: 0; padding: 0;
             font-family: "HiraMinProN-W3", "Hiragino Mincho ProN", serif;
             background-color: #111; color: #e0e0e0;
-            background-image: url('back.jpg');
+            background-image: url('background.jpg'); 
             background-size: cover; background-position: center; background-attachment: fixed;
             min-height: 100vh; display: flex; flex-direction: column;
         }
         .overlay {
-            background-color: rgba(0, 0, 0, 0.85); /* 全体を暗くするフィルター */
+            background-color: rgba(0, 0, 0, 0.85);
             flex: 1; display: flex; flex-direction: column; width: 100%;
         }
 
@@ -27,32 +27,34 @@
         }
         @keyframes pulse { 0% {background: rgba(80,0,0,0.6);} 50% {background: rgba(120,20,20,0.6);} 100% {background: rgba(80,0,0,0.6);} }
 
-        /* --- 設定ボタンエリア --- */
-        .settings-bar {
-            display: flex; justify-content: flex-end; padding: 10px 20px;
+        /* --- 設定・ログアウトバー --- */
+        .top-bar {
+            display: flex; justify-content: flex-end; padding: 10px 20px; gap: 10px;
         }
         .icon-btn {
             background: none; border: 1px solid #555; color: #aaa;
             padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
+            transition: 0.3s;
         }
         .icon-btn:hover { background: #333; color: #fff; border-color: #fff; }
+        .logout-btn { border-color: #622; color: #c88; }
+        .logout-btn:hover { background: #411; color: #fcc; border-color: #f88; }
 
         /* --- ヘッダー --- */
         header { text-align: center; padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
         .logo { height: 60px; filter: drop-shadow(0 0 5px white); margin-bottom: 10px; }
         h1 { margin: 0; font-size: 1.8rem; letter-spacing: 0.1em; text-shadow: 0 0 10px black; }
 
-        /* --- メインメニュー（ボタン群） --- */
+        /* --- メインメニュー --- */
         .menu-container {
             max-width: 1000px; margin: 0 auto; width: 95%; text-align: center; padding-bottom: 50px;
-            display: none; /* ログイン後に表示 */
+            display: none; /* 初期状態は非表示 */
         }
         .welcome-text { font-size: 1.5rem; margin-bottom: 30px; font-weight: bold; }
         
         .grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;
         }
-        /* リンクボタン */
         .app-link {
             display: flex; justify-content: center; align-items: center;
             background: rgba(30, 40, 50, 0.8); color: white; border: 1px solid #555;
@@ -66,15 +68,16 @@
         /* --- フッター --- */
         footer { margin-top: auto; padding: 15px; text-align: center; color: #666; font-size: 0.8rem; border-top: 1px solid #222; }
 
-        /* --- モーダル（ログイン・設定） --- */
+        /* --- モーダル共通 --- */
         .modal-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 999;
             display: flex; justify-content: center; align-items: center;
             padding: 20px; box-sizing: border-box;
         }
-        /* 設定モーダルは初期非表示 */
-        #settings-modal { background: rgba(0,0,0,0.9); display: none; }
+        /* ログインモーダルはJSで制御するため初期は非表示にしておく（ちらつき防止） */
+        #login-modal { display: flex; } 
+        #settings-modal { display: none; background: rgba(0,0,0,0.9); }
 
         .modal-content {
             background: #151515; border: 1px solid #444; padding: 40px 30px;
@@ -129,7 +132,7 @@
             <h2>パスワード変更</h2>
             
             <p style="text-align:left; font-size:0.9rem; margin:0;">新しいパスワード</p>
-            <input type="text" id="new-pass" placeholder="英数字・日本語のみ">
+            <input type="text" id="new-pass" placeholder="英数字・日本語のみ(日本語はおすすめできません)">
             <input type="text" id="confirm-pass" placeholder="確認のため再入力">
             
             <button class="primary-btn" id="btn-change" onclick="execChangePass()">変更を保存</button>
@@ -139,15 +142,15 @@
 
     <div class="overlay">
         <div class="admin-msg">
-            【運営より】現在、開発途中です。㎰変更もできます。いろいろ試してみてください。
+            【運営より】現在、システムは正常に稼働しています。定期的なパスワード変更を推奨します。
         </div>
 
-        <div class="settings-bar">
-            <button class="icon-btn" onclick="toggleSettings(true)">⚙ システム設定</button>
+        <div class="top-bar" id="top-bar" style="display:none;"> <button class="icon-btn" onclick="toggleSettings(true)">⚙ 設定</button>
+            <button class="icon-btn logout-btn" onclick="execLogout()">↪ ログアウト</button>
         </div>
 
         <header>
-            <img src="stella.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+            <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
             <h1>国家運営処理システム<br>ステッラ</h1>
         </header>
 
@@ -172,9 +175,9 @@
 
     <script>
 
-        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU'; // シートID
-        const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwWG2Qs3cyDVX_3JseXmRepmDJzyWvPoNkhTwxu2wHUplUMEEUcsANtoMZ8u9dqw894/exec'; // GAS URL
-        const SHEET_NAME = 'CountryData'; // タブ名
+        const SHEET_ID = '1-UDU2Vm9fMu9Js4LjVvro_jNB96pM-tMvN8ufc7BkUU'; 
+        const GAS_URL  = 'https://script.google.com/macros/s/AKfycbwWG2Qs3cyDVX_3JseXmRepmDJzyWvPoNkhTwxu2wHUplUMEEUcsANtoMZ8u9dqw894/exec'; 
+        const SHEET_NAME = 'CountryData'; 
 
 
         let db = {}; // データ保持用
@@ -186,8 +189,7 @@
             const status = document.getElementById('login-status');
             
             try {
-                // スプレッドシート読み込み (Visualization API)
-                // キャッシュ回避のタイムスタンプ付き
+                // スプレッドシート読み込み
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}&t=${Date.now()}`;
                 
                 const res = await fetch(url);
@@ -195,7 +197,6 @@
                 
                 const text = await res.text();
                 
-                // エラー判定（HTMLが返ってきている場合など）
                 if(text.trim().startsWith("<")) {
                     throw new Error("共有設定エラー: シートを「リンクを知っている全員」にしてください");
                 }
@@ -203,9 +204,18 @@
                 // CSV解析
                 parseCSV(text);
 
-                // 準備完了
-                btn.disabled = false;
-                btn.innerText = "接続開始";
+                // ★★★ ここで自動ログイン判定 ★★★
+                const storedCountry = sessionStorage.getItem('loginCountry');
+                
+                // 保存された国があり、かつDBにもその国が存在する場合
+                if (storedCountry && db[storedCountry]) {
+                    console.log("自動ログイン: " + storedCountry);
+                    loginSuccess(storedCountry);
+                } else {
+                    // 自動ログインできない場合はボタンを有効化して待機
+                    btn.disabled = false;
+                    btn.innerText = "接続開始";
+                }
                 
             } catch(e) {
                 console.error(e);
@@ -220,16 +230,10 @@
             select.innerHTML = '<option value="">国家を選択してください</option>';
 
             rows.forEach((row, i) => {
-                // 1行目(ヘッダー)は無視
-                if(i === 0) return;
-                
-                // カンマ区切り＆ダブルクォート除去
+                if(i === 0) return; // ヘッダー無視
                 const cols = row.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-                
-                // データがある行だけ処理 (A列=国名, B列=パス)
                 if(cols.length >= 2 && cols[0]) {
                     db[cols[0]] = cols[1]; // メモリに保存
-                    
                     const opt = document.createElement('option');
                     opt.value = cols[0];
                     opt.innerText = cols[0];
@@ -238,7 +242,18 @@
             });
         }
 
-        // ログイン実行
+        // ログイン成功時の画面切り替え処理（共通化）
+        function loginSuccess(country) {
+            currentCountry = country;
+            sessionStorage.setItem('loginCountry', country); // 保存
+            
+            document.getElementById('login-modal').style.display = 'none'; // モーダル消去
+            document.getElementById('main-menu').style.display = 'block'; // メニュー表示
+            document.getElementById('top-bar').style.display = 'flex'; // 設定バー表示
+            document.getElementById('welcome-msg').innerText = `ようこそ、${country} 指導者様`;
+        }
+
+        // ログインボタンを押した時の処理
         function execLogin() {
             const country = document.getElementById('login-country').value;
             const pass = document.getElementById('login-pass').value;
@@ -250,15 +265,18 @@
             }
 
             if(db[country] === pass) {
-                // 成功
-                currentCountry = country;
-                sessionStorage.setItem('loginCountry', country);
-                document.getElementById('login-modal').style.display = 'none'; // モーダル消去
-                document.getElementById('main-menu').style.display = 'block'; // メニュー表示
-                document.getElementById('welcome-msg').innerText = `ようこそ、${country} 指導者様`;
+                loginSuccess(country);
             } else {
                 status.innerText = "パスワードが違います";
                 document.getElementById('login-pass').value = "";
+            }
+        }
+
+        // ログアウト処理
+        function execLogout() {
+            if(confirm('ログアウトしますか？')) {
+                sessionStorage.removeItem('loginCountry');
+                location.reload(); // ページをリロードしてログイン画面に戻す
             }
         }
 
@@ -267,7 +285,6 @@
             const modal = document.getElementById('settings-modal');
             modal.style.display = show ? 'flex' : 'none';
             if(show) {
-                // リセット
                 document.getElementById('new-pass').value = "";
                 document.getElementById('confirm-pass').value = "";
                 document.getElementById('setting-status').innerText = "";
@@ -281,7 +298,6 @@
             const status = document.getElementById('setting-status');
             const btn = document.getElementById('btn-change');
 
-            // バリデーション
             const regex = /^[a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/;
             if(!newPass || !regex.test(newPass)) {
                 status.innerText = "使用できない文字が含まれています";
@@ -294,13 +310,11 @@
                 return;
             }
 
-            // 送信処理
             status.innerText = "サーバー通信中...";
             status.className = "status-msg";
             btn.disabled = true;
 
             try {
-                // フォームデータ形式で送信（CORS対策に強い）
                 const formData = new URLSearchParams();
                 formData.append('country', currentCountry);
                 formData.append('newPass', newPass);
@@ -325,8 +339,6 @@
             } catch(e) {
                 console.error(e);
                 status.innerText = "送信完了(確認中)... エラー表示でも変更されている可能性があります";
-                // GASは成功していても通信経路の問題でエラーに見えることがあるため、
-                // 致命的なエラー以外は「完了」扱いにする手もありますが、今回は正直に表示します
             } finally {
                 btn.disabled = false;
             }
