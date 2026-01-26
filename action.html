@@ -2,88 +2,110 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>National Action</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Policy Action</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-dark: #121212;
-            --surface: #1e1e1e;
-            --primary: #bb86fc;
-            --text: #ffffff;
-            --border: #333;
-            --danger: #cf6679;
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --panel-bg: #1e1e1e;
+            --accent-green: #4caf50;
+            --accent-red: #f44336;
+            --accent-blue: #2196f3;
+            --heavy-border: 2px solid #555;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg-color);
             background-image: url('back.jpg');
             background-size: cover;
-            background-attachment: fixed;
             background-position: center;
-            color: var(--text);
-            font-family: sans-serif;
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
             margin: 0;
             padding: 0;
-            padding-bottom: 50px;
-        }
-
-        /* 背景を暗くするためのオーバーレイ */
-        .overlay {
-            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
         }
 
-        /* ヘッダー周り */
+        /* オーバーレイで背景を暗くする */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+
         header {
+            width: 100%;
+            padding: 15px;
+            background: rgba(30, 30, 30, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 1px solid #444;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-info {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            margin-right: 15px;
-            border: 2px solid var(--primary);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            padding: 8px 15px;
-            border-radius: 5px;
-            text-decoration: none;
+            font-size: 1.2rem;
             font-weight: bold;
         }
 
-        /* コンテナ */
-        .section {
-            background: var(--surface);
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--text-color);
+        }
+
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 600px;
+            margin-top: 20px;
+            padding-bottom: 50px;
+        }
+
+        .card {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 8px;
             padding: 15px;
-            border-radius: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
         }
 
         h2 {
-            font-size: 1.1rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 5px;
             margin-top: 0;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         /* インフレ表示 */
@@ -91,118 +113,101 @@
             font-size: 2.5rem;
             font-weight: bold;
             text-align: center;
-            padding: 10px;
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* グラフコンテナ */
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
-        }
-
         /* ボタン群 */
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        button {
-            background: #333;
-            color: white;
-            border: 1px solid var(--primary);
-            padding: 15px;
-            font-size: 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
+        .action-btn {
+            display: block;
             width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 1rem;
             font-weight: bold;
+            color: white;
+            background: linear-gradient(145deg, #333, #222);
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s;
         }
 
-        button:active {
+        .action-btn:active {
             transform: scale(0.98);
         }
 
-        /* 国家総動員ボタン */
-        .mobilize-btn {
-            background: #2b0000;
-            border: 2px solid #ff0000;
-            color: #ff4444;
-            font-family: 'Times New Roman', serif;
+        /* 国家総動員ボタン（重厚） */
+        #btn-mobilize {
+            background: linear-gradient(180deg, #5d0000, #2a0000);
+            border: 3px double #ff4444;
+            color: #ffcccc;
+            font-family: serif;
             letter-spacing: 2px;
-            text-transform: uppercase;
+            text-shadow: 0 0 5px red;
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
-            margin-top: 20px;
-            padding: 20px;
+            margin-top: 30px;
         }
-        
-        .mobilize-btn:disabled {
-            background: #444;
-            border-color: #666;
-            color: #888;
-            box-shadow: none;
+        #btn-mobilize:disabled {
+            background: #333;
+            border-color: #555;
+            color: #777;
+            text-shadow: none;
+            box-shadow: inset 0 0 10px #000;
             cursor: not-allowed;
-            text-decoration: line-through;
         }
 
         /* モーダル */
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
             z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background: var(--surface);
+            background-color: #222;
+            border: 1px solid #555;
             padding: 20px;
-            border-radius: 10px;
             width: 90%;
             max-width: 400px;
-            border: 1px solid var(--primary);
+            border-radius: 8px;
+            position: relative;
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            width: auto;
-            padding: 0;
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
             color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
-        .info-row {
+        .data-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            font-size: 0.9rem;
-            border-bottom: 1px dashed #444;
+            border-bottom: 1px dotted #444;
             padding-bottom: 4px;
         }
 
         input[type="number"] {
             width: 100%;
             padding: 10px;
-            box-sizing: border-box;
             background: #111;
             border: 1px solid #555;
             color: white;
             font-size: 1.2rem;
             margin: 15px 0;
-            border-radius: 5px;
+            box-sizing: border-box;
         }
 
         .modal-actions {
@@ -210,99 +215,126 @@
             gap: 10px;
         }
 
-        .confirm-btn { background: var(--primary); color: black; border: none; }
-        .cancel-input-btn { background: var(--danger); border: none; }
+        .btn-confirm {
+            flex: 2;
+            background: var(--accent-blue);
+            border: none;
+            padding: 10px;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-cancel {
+            flex: 1;
+            background: #555;
+            border: none;
+            padding: 10px;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-        /* テーブル */
-        table {
+        table.status-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
         }
-        th, td {
+        
+        table.status-table th, table.status-table td {
             border: 1px solid #444;
             padding: 8px;
             text-align: center;
-            font-size: 0.9rem;
         }
-        th { background: #222; }
+        
+        table.status-table th {
+            background: #333;
+        }
 
+        /* グラフコンテナ */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
-<div class="overlay">
-    <a href="home.html" class="back-btn">Return</a>
-    
-    <header>
-        <img src="stella.png" alt="Icon" class="icon">
-        <h1 id="country-name">Loading...</h1>
-    </header>
+<header>
+    <div class="user-info">
+        <img src="stella.png" alt="Icon" class="user-icon">
+        <span id="country-name">Loading...</span>
+    </div>
+    <a href="home.html" class="back-btn">戻る</a>
+</header>
 
-    <div class="section">
-        <h2>Inflation Level</h2>
+<div class="container">
+    <div class="card">
+        <h2>インフレレベル</h2>
         <div id="inflation-display">--</div>
     </div>
 
-    <div class="section">
-        <h2>Inflation Trends</h2>
+    <div class="card">
+        <h2>インフレ推移</h2>
         <div class="chart-container">
-            <canvas id="chart1"></canvas>
+            <canvas id="chart-inflation"></canvas>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Economic Power</h2>
+    <div class="card">
+        <h2>経済力推移</h2>
         <div class="chart-container">
-            <canvas id="chart2"></canvas>
+            <canvas id="chart-economy"></canvas>
         </div>
     </div>
 
-    <div class="btn-group">
-        <button onclick="openModal('industry')">産業技術開発を行う</button>
-        <button onclick="openModal('military')">軍事技術開発を行う</button>
-        <button onclick="openModal('expansion')">軍拡を予定する</button>
-        
-        <button class="mobilize-btn" id="mobilize-btn" onclick="confirmMobilization()">
-            ⚠ 国家総動員を行う ⚠
-        </button>
-    </div>
+    <button class="action-btn" onclick="openModal('industrial')">産業技術開発を行う</button>
+    <button class="action-btn" onclick="openModal('military')">軍事技術開発を行う</button>
+    <button class="action-btn" onclick="openModal('expansion')">軍拡を予定する</button>
+    
+    <button id="btn-mobilize" class="action-btn" onclick="confirmMobilization()">⚠ 国家総動員を行う ⚠</button>
 </div>
 
 <div id="tech-modal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modal-title">Development</h3>
-            <button class="close-modal" onclick="closeModal('tech-modal')">×</button>
+        <span class="close" onclick="closeModal('tech-modal')">&times;</span>
+        <h2 id="tech-title">開発</h2>
+        
+        <div class="data-row">
+            <span>現在の投資額:</span> <span id="tech-current-invest">0</span>
         </div>
-        <div id="tech-info">
-            </div>
-        <label>投資額入力:</label>
-        <input type="number" id="invest-amount" placeholder="0">
+        <div class="data-row">
+            <span>これまでの投資額:</span> <span id="tech-total-invest">0</span>
+        </div>
+        <div class="data-row">
+            <span>現在の技術力:</span> <span id="tech-level">0</span>
+        </div>
+
+        <p>投資額を入力 (Max 1000)</p>
+        <input type="number" id="tech-input" min="0" max="1000" placeholder="0">
+
         <div class="modal-actions">
-            <button class="confirm-btn" onclick="submitTech()">決定</button>
-            <button class="cancel-input-btn" onclick="resetTechInput()">取消 (0にする)</button>
+            <button class="btn-cancel" onclick="resetTechInvestment()">取り消し(0にする)</button>
+            <button class="btn-confirm" onclick="submitTechInvestment()">決定</button>
         </div>
     </div>
 </div>
 
 <div id="expansion-modal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3>軍拡計画状況</h3>
-            <button class="close-modal" onclick="closeModal('expansion-modal')">×</button>
+        <span class="close" onclick="closeModal('expansion-modal')">&times;</span>
+        <h2>軍拡状況</h2>
+        
+        <div class="data-row">
+            <span>軍拡プール:</span> <span id="exp-pool">0</span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <div style="text-align: center; width: 48%; background: #222; padding: 10px; border-radius: 5px;">
-                <div style="font-size:0.8rem; color:#aaa;">軍拡速度</div>
-                <div id="exp-speed" style="font-size:1.2rem; font-weight:bold;">-</div>
-            </div>
-            <div style="text-align: center; width: 48%; background: #222; padding: 10px; border-radius: 5px;">
-                <div style="font-size:0.8rem; color:#aaa;">軍拡プール</div>
-                <div id="exp-pool" style="font-size:1.2rem; font-weight:bold;">-</div>
-            </div>
+        <div class="data-row">
+            <span>軍拡速度:</span> <span id="exp-speed">0</span>
         </div>
-        <table>
+
+        <table class="status-table">
             <thead>
                 <tr>
                     <th>現在の軍量</th>
@@ -312,9 +344,9 @@
             </thead>
             <tbody>
                 <tr>
-                    <td id="army-size">-</td>
-                    <td id="army-fulfill">-</td>
-                    <td id="army-deployed">-</td>
+                    <td id="exp-amount">0</td>
+                    <td id="exp-sufficiency">0%</td>
+                    <td id="exp-deployed">0</td>
                 </tr>
             </tbody>
         </table>
@@ -322,157 +354,145 @@
 </div>
 
 <script>
-
-    const GAS_URL = "https://script.google.com/macros/s/AKfycby92VrVNpn65LjqnYKJoB68dDnHzvtSsNzIevkaoBZ7s1tucwSnX5YkMTS8NN0GyPKzqw/exec"; 
-
-
-    // ログイン状態確認
+    // ▼ ここにデプロイしたGASのウェブアプリURLを貼ってください ▼
+    const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    
+    // セッション情報の確認
     const country = sessionStorage.getItem('loginCountry');
     if (!country) {
-        alert("ログインされていません。ホームに戻ります。");
         window.location.href = 'home.html';
     }
-
     document.getElementById('country-name').textContent = country;
 
-    // グローバル変数
-    let currentActionData = {};
-    let activeModalType = "";
+    // グローバル変数でデータを保持
+    let currentData = null;
+    let currentModalType = ''; // 'industrial' or 'military'
 
-    // データロード
-    window.onload = async function() {
+    // 初期ロード
+    window.onload = loadData;
+
+    async function loadData() {
         try {
-            const response = await fetch(`${GAS_URL}?action=getData&country=${encodeURIComponent(country)}`);
+            const response = await fetch(`${GAS_API_URL}?action=getData&country=${encodeURIComponent(country)}`);
             const data = await response.json();
-
+            
             if (data.error) {
-                alert("データ取得エラー: " + data.error);
+                alert('データ取得エラー: ' + data.error);
                 return;
             }
 
-            renderInflation(data.inflation);
-            renderCharts(data.chart1, data.chart2);
-            updateActionData(data.action);
-
+            currentData = data;
+            renderPage(data);
         } catch (e) {
             console.error(e);
-            alert("通信エラーが発生しました。");
+            alert('通信エラーが発生しました');
         }
-    };
+    }
 
-    // インフレ表示の色計算
-    function renderInflation(value) {
-        const el = document.getElementById('inflation-display');
-        el.textContent = value;
-        
-        let color = "white";
-        if (value >= 0) {
-            // 0(緑) -> 100(赤)
-            const r = Math.min(255, (value / 100) * 255);
-            const g = Math.max(0, 255 - (value / 100) * 255);
-            color = `rgb(${r}, ${g}, 0)`; 
+    function renderPage(data) {
+        // 1. インフレ表示
+        const infl = Number(data.inflation);
+        const inflEl = document.getElementById('inflation-display');
+        inflEl.textContent = infl;
+
+        // 色計算 (-100:青 -> 0:緑 -> 100:赤)
+        let color = 'white';
+        if (infl >= 0) {
+            // 緑(0) -> 赤(100)
+            const ratio = Math.min(infl / 100, 1);
+            // 緑: rgb(76, 175, 80), 赤: rgb(244, 67, 54)
+            // シンプルにRGB補間で計算
+            color = `rgb(${76 + (244-76)*ratio}, ${175 + (67-175)*ratio}, ${80 + (54-80)*ratio})`;
         } else {
-            // 0(緑) -> -100(青)
-            const valAbs = Math.abs(value);
-            const g = Math.max(0, 255 - (valAbs / 100) * 255);
-            const b = Math.min(139, (valAbs / 100) * 139); // deep blue max
-            color = `rgb(0, ${g}, ${b})`; 
+            // 緑(0) -> 青(-100)
+            const ratio = Math.min(Math.abs(infl) / 100, 1);
+            // 青: rgb(33, 150, 243)
+            color = `rgb(${76 + (33-76)*ratio}, ${175 + (150-175)*ratio}, ${80 + (243-80)*ratio})`;
         }
-        el.style.color = color;
-    }
+        inflEl.style.color = color;
 
-    // グラフ描画
-    function renderCharts(data1, data2) {
-        const createChart = (ctxId, label, data, color) => {
-            const ctx = document.getElementById(ctxId).getContext('2d');
-            // ラベル（日付）は簡易的に連番にする（要件に日付列指定がなかったため）
-            const labels = data.map((_, i) => `Day ${i+1}`);
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: color,
-                        backgroundColor: color,
-                        borderWidth: 2,
-                        pointRadius: 1,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            grid: { color: '#333' },
-                            ticks: { color: '#aaa' }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false } // スマホで見やすくするため凡例非表示
-                    }
-                }
-            });
-        };
+        // 2. グラフ描画
+        drawChart('chart-inflation', 'インフレ推移', data.history_inflation, 'rgba(255, 99, 132, 1)');
+        drawChart('chart-economy', '経済力', data.history_economy, 'rgba(54, 162, 235, 1)');
 
-        createChart('chart1', 'Inflation', data1, '#ff6384'); // Reddish
-        createChart('chart2', 'Economy', data2, '#36a2eb'); // Blueish
-    }
-
-    // アクションデータの保持と更新
-    function updateActionData(data) {
-        currentActionData = data;
-        
-        // 国家総動員ボタンの状態
-        const mobBtn = document.getElementById('mobilize-btn');
-        if (data.mobilization == 1) {
+        // 3. 総動員ボタンの状態
+        const mobBtn = document.getElementById('btn-mobilize');
+        if (data.action.mobilized == 1) {
             mobBtn.disabled = true;
             mobBtn.textContent = "国家総動員 発令済み";
+            mobBtn.style.borderStyle = "inset";
         }
     }
 
-    // モーダルオープン
+    function drawChart(canvasId, label, dataArray, color) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        // 日付ラベルは単純に1日目, 2日目...とするか、配列長から生成
+        const labels = dataArray.map((_, i) => `Day ${i+1}`);
+        
+        // 既存チャートがあれば破棄（再描画時）
+        if (window[canvasId] instanceof Chart) {
+            window[canvasId].destroy();
+        }
+
+        window[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: dataArray,
+                    borderColor: color,
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        grid: { color: '#333' },
+                        ticks: { color: '#aaa' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // --- モーダル操作 ---
+
     function openModal(type) {
-        activeModalType = type;
-        const modal = document.getElementById('tech-modal');
-        const expModal = document.getElementById('expansion-modal');
-        const infoDiv = document.getElementById('tech-info');
-        const title = document.getElementById('modal-title');
-        const input = document.getElementById('invest-amount');
+        const d = currentData.action;
+        if (!d) return;
 
-        if (type === 'industry') {
-            title.textContent = "産業技術開発";
-            infoDiv.innerHTML = `
-                <div class="info-row"><span>現在投資額:</span> <span>${currentActionData.ind_current}</span></div>
-                <div class="info-row"><span>累積投資額:</span> <span>${currentActionData.ind_total}</span></div>
-                <div class="info-row"><span>技術レベル:</span> <span>${currentActionData.ind_level}</span></div>
-            `;
-            input.value = currentActionData.ind_current; // 初期値
-            input.max = 1000;
-            modal.style.display = 'flex';
-
+        if (type === 'industrial') {
+            currentModalType = 'industrial';
+            document.getElementById('tech-title').innerText = "産業技術開発";
+            document.getElementById('tech-current-invest').innerText = d.ind_invest_now;
+            document.getElementById('tech-total-invest').innerText = d.ind_invest_total;
+            document.getElementById('tech-level').innerText = d.ind_tech;
+            document.getElementById('tech-input').value = '';
+            document.getElementById('tech-modal').style.display = 'flex';
         } else if (type === 'military') {
-            title.textContent = "軍事技術開発";
-            infoDiv.innerHTML = `
-                <div class="info-row"><span>現在投資額:</span> <span>${currentActionData.mil_current}</span></div>
-                <div class="info-row"><span>累積投資額:</span> <span>${currentActionData.mil_total}</span></div>
-                <div class="info-row"><span>技術レベル:</span> <span>${currentActionData.mil_level}</span></div>
-            `;
-            input.value = currentActionData.mil_current;
-            input.removeAttribute('max');
-            modal.style.display = 'flex';
-
+            currentModalType = 'military';
+            document.getElementById('tech-title').innerText = "軍事技術開発";
+            document.getElementById('tech-current-invest').innerText = d.mil_invest_now;
+            document.getElementById('tech-total-invest').innerText = d.mil_invest_total;
+            document.getElementById('tech-level').innerText = d.mil_tech;
+            document.getElementById('tech-input').value = '';
+            document.getElementById('tech-modal').style.display = 'flex';
         } else if (type === 'expansion') {
-            document.getElementById('exp-pool').textContent = currentActionData.pool;
-            document.getElementById('exp-speed').textContent = currentActionData.speed;
-            document.getElementById('army-size').textContent = currentActionData.army_size;
-            document.getElementById('army-fulfill').textContent = currentActionData.fulfill;
-            document.getElementById('army-deployed').textContent = currentActionData.deployed;
-            expModal.style.display = 'flex';
+            document.getElementById('exp-pool').innerText = d.pool;
+            document.getElementById('exp-speed').innerText = d.speed;
+            document.getElementById('exp-amount').innerText = d.mil_amount;
+            document.getElementById('exp-sufficiency').innerText = (d.sufficiency * 100).toFixed(1) + '%';
+            document.getElementById('exp-deployed').innerText = d.deployed;
+            document.getElementById('expansion-modal').style.display = 'flex';
         }
     }
 
@@ -480,70 +500,71 @@
         document.getElementById(id).style.display = 'none';
     }
 
-    // 入力を0にする（取消）
-    function resetTechInput() {
-        document.getElementById('invest-amount').value = 0;
+    // --- 送信処理 ---
+
+    function submitTechInvestment() {
+        const val = parseInt(document.getElementById('tech-input').value);
+        if (isNaN(val) || val < 0 || val > 1000) {
+            alert('0〜1000の範囲で入力してください');
+            return;
+        }
+        
+        const typeKey = currentModalType === 'industrial' ? 'invest_industrial' : 'invest_military';
+        sendPost(typeKey, val);
+        closeModal('tech-modal');
     }
 
-    // 技術開発の送信
-    async function submitTech() {
-        const val = document.getElementById('invest-amount').value;
-        if (val === "") return;
-        
-        // ローディング表示などの代わりにボタンの無効化を推奨
-        
+    function resetTechInvestment() {
+        const typeKey = currentModalType === 'industrial' ? 'invest_industrial' : 'invest_military';
+        sendPost(typeKey, 0);
+        closeModal('tech-modal');
+    }
+
+    function confirmMobilization() {
+        if (confirm("【警告】\n国家総動員を発令しますか？\nこの操作は取り消せません。")) {
+            sendPost('mobilize', 1);
+        }
+    }
+
+    // データの送信（CORS回避のため text/plain で送るのがGAS定石の一つだが、fetchでno-corsだとレスポンス読めない。
+    // 今回はCORSヘッダ付きのレスポンスをGAS側で返す構成にしている前提。）
+    async function sendPost(type, value) {
         const payload = {
             country: country,
-            type: activeModalType, // 'industry' or 'military'
-            amount: val
+            type: type,
+            value: value
         };
 
         try {
-            await sendPost(payload);
-            alert("設定を更新しました。");
-            closeModal('tech-modal');
-            location.reload(); // データ再取得のためリロード
-        } catch (e) {
-            alert("更新に失敗しました。");
-        }
-    }
-
-    // 国家総動員
-    async function confirmMobilization() {
-        if (!confirm("【警告】\n国家総動員を行いますか？\nこの操作は取り消せません。")) {
-            return;
-        }
-
-        try {
-            const res = await sendPost({
-                country: country,
-                type: 'mobilization'
+            // sendBeaconではなくfetchを使う
+            const response = await fetch(GAS_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+                // ヘッダーを指定するとOPTIONSプリフライトが飛びCORSエラーになりやすいので
+                // GAS側で text/plain として受け取るよう実装済み (e.postData.contents)
             });
+            
+            const res = await response.json();
             if (res.success) {
-                alert("国家総動員を発令しました。");
-                location.reload();
+                // 成功したらデータを再読み込みして画面更新
+                loadData();
             } else {
-                alert("エラー: " + res.message);
+                alert('エラー: ' + res.message);
             }
         } catch (e) {
-            alert("通信エラーが発生しました。");
+            console.error(e);
+            // GASの仕様上、リダイレクト周りでエラーに見えることがあるが処理されている場合も多い
+            // ここでは簡易的にリロード
+            setTimeout(loadData, 1000); 
         }
     }
-
-    // POST送信ヘルパー
-    async function sendPost(data) {
-        // GAS Web AppへのPOSTはCORS制限があるため、no-corsではなく
-        // text/plainとして送り、GAS側でJSON.parseする方法をとっています。
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            }
-        });
-        return await response.json();
+    
+    // モーダル外クリックで閉じる
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
     }
-
 </script>
 
 </body>
