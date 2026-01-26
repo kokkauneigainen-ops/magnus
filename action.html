@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Policy Action</title>
+    <link rel="icon" href="stella.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --panel-bg: rgba(0, 0, 0, 0.7);
+            --modal-bg: #2d2d2d;
+            --heavy-btn-color: #8b0000;
+        }
+
+        body {
+            background-image: url('back.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Bar */
+        #top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #country-name {
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            background: var(--panel-bg);
+            padding: 10px 30px;
+            border-radius: 5px;
+        }
+
+        #back-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #back-btn:hover { background: #666; }
+
+        /* Sections */
+        .section {
+            background: var(--panel-bg);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        /* Inflation Text */
+        #inflation-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Buttons */
+        .action-btn {
+            display: block;
+            width: 80%;
+            margin: 15px auto;
+            padding: 15px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            transition: 0.2s;
+        }
+        .action-btn:hover { background: #555; }
+
+        /* Heavy Button (National Mobilization) */
+        #mobilize-btn {
+            background: linear-gradient(to bottom, #500, #300);
+            border: 3px double #f00;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+            margin-top: 40px;
+        }
+        #mobilize-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #700, #400);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+        }
+        #mobilize-btn:disabled {
+            background: #222;
+            color: #555;
+            border-color: #444;
+            cursor: not-allowed;
+            box-shadow: inset 0 0 10px #000;
+            transform: scale(0.98);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--modal-bg);
+            padding: 20px;
+            border: 1px solid #666;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 5px;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px; right: 15px;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        /* Tables and Inputs inside Modal */
+        .info-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: collapse;
+        }
+        .info-table td, .info-table th {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .input-group {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        input[type="number"] {
+            padding: 8px;
+            background: #111;
+            color: white;
+            border: 1px solid #444;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-confirm { background: #28a745; color: white; }
+        .btn-cancel { background: #dc3545; color: white; }
+
+        /* Flex container for Military Expansion */
+        .mil-pool-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <div id="country-name">Loading...</div>
+        <button id="back-btn" onclick="window.history.back()">Back</button>
+    </div>
+
+    <div class="section">
+        <h3>Current Inflation Level</h3>
+        <div id="inflation-display">--</div>
+    </div>
+
+    <div class="section">
+        <h3>Inflation Trends</h3>
+        <canvas id="chart-inflation"></canvas>
+    </div>
+    <div class="section">
+        <h3>Economic Power Trends</h3>
+        <canvas id="chart-economy"></canvas>
+    </div>
+
+    <div class="section">
+        <button class="action-btn" onclick="openIndustryModal()">産業技術開発を行う</button>
+        <button class="action-btn" onclick="openMilitaryModal()">軍事技術開発を行う</button>
+        <button class="action-btn" onclick="openExpansionModal()">軍拡を予定する</button>
+        
+        <button id="mobilize-btn" class="action-btn" onclick="confirmMobilization()">国家総動員を行う</button>
+    </div>
+
+    <div id="modal-industry" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modal-industry')">&times;</span>
+            <h3>産業技術開発</h3>
+            <div class="info-table-container">
+                <table class="info-table">
+                    <tr><th>現在投資額</th><th>これまでの投資額</th><th>産業技術力</th></tr>
+                    <tr><td id="ind-current">0</td><td id="ind-total">0</td><td id="ind-level">0</td></tr>
+                </table>
+            </div>
+            <div class="input-group">
+                <input type="number" id="ind-input" min="0" max="1000" placeholder="投資額 (Max 1000)">
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn btn-confirm" onclick="submitInvestment('industry')">決定</button>
+                <button class="modal-btn btn-cancel" onclick="cancelInvestment('industry')">取り消し (0にする)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-military" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modal-military')">&times;</span>
+            <h3>軍事技術開発</h3>
+            <div class="info-table-container">
+                <table class="info-table">
+                    <tr><th>現在投資額</th><th>これまでの投資額</th><th>軍事技術力</th></tr>
+                    <tr><td id="mil-current">0</td><td id="mil-total">0</td><td id="mil-level">0</td></tr>
+                </table>
+            </div>
+            <div class="input-group">
+                <input type="number" id="mil-input" min="0" max="1000" placeholder="投資額">
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn btn-confirm" onclick="submitInvestment('military')">決定</button>
+                <button class="modal-btn btn-cancel" onclick="cancelInvestment('military')">取り消し (0にする)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-expansion" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('modal-expansion')">&times;</span>
+            <h3>軍拡予定</h3>
+            <div class="mil-pool-container">
+                <div>軍拡速度: <span id="mil-speed">0</span></div>
+                <div>軍拡プール: <span id="mil-pool">0</span></div>
+            </div>
+            <table class="info-table">
+                <tr><th>現在の軍量</th><th>充足率</th><th>展開されている軍量</th></tr>
+                <tr><td id="mil-amount">0</td><td id="mil-suff">0</td><td id="mil-deployed">0</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx7CvU1qXArDxH1SE6ILvyGb7-IpN5D8mdJUEmmJL1VI7S56NRnLZVJKlyNaWtjHurH-g/exec";
+
+
+        let currentData = null;
+        let loginCountry = sessionStorage.getItem('login Country');
+
+        // 初期化処理
+        window.onload = function() {
+            if (!loginCountry) {
+                // ログインしていない場合ホームへ
+                window.location.href = 'home.html';
+                return;
+            }
+            document.getElementById('country-name').innerText = loginCountry;
+            fetchData();
+        };
+
+        // GASからデータを取得
+        function fetchData() {
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getData", country: loginCountry })
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === 'success') {
+                    currentData = response.data;
+                    renderPage();
+                } else {
+                    alert('データの取得に失敗しました: ' + response.message);
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function renderPage() {
+            // インフレ表示更新
+            updateInflationDisplay(currentData.inflation);
+            // グラフ更新
+            renderChart('chart-inflation', 'Inflation', currentData.chartInflation, 'rgb(255, 99, 132)');
+            renderChart('chart-economy', 'Economic Power', currentData.chartEconomy, 'rgb(75, 192, 192)');
+            
+            // 総動員ボタンの状態
+            const mobBtn = document.getElementById('mobilize-btn');
+            if (currentData.action.isMobilized == 1) {
+                mobBtn.disabled = true;
+                mobBtn.innerText = "国家総動員 (発令済み)";
+            }
+        }
+
+        // インフレ数値の色処理
+        function updateInflationDisplay(value) {
+            const el = document.getElementById('inflation-display');
+            el.innerText = value;
+            
+            let color = "white";
+            if (value >= 0) {
+                // 0(緑) -> 100(赤)
+                // 緑: (0,255,0), 赤: (255,0,0)
+                const ratio = Math.min(value / 100, 1);
+                const r = Math.floor(255 * ratio);
+                const g = Math.floor(255 * (1 - ratio));
+                color = `rgb(${r}, ${g}, 0)`;
+            } else {
+                // 0(緑) -> -100(深い青)
+                // 緑: (0,255,0), 深い青: (0,0,139)
+                const ratio = Math.min(Math.abs(value) / 100, 1);
+                // G: 255 -> 0, B: 0 -> 139, R: 0
+                const g = Math.floor(255 * (1 - ratio));
+                const b = Math.floor(139 * ratio);
+                color = `rgb(0, ${g}, ${b})`;
+            }
+            el.style.color = color;
+        }
+
+        // グラフ描画
+        function renderChart(canvasId, label, data, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            // 既存のチャートがあれば破棄 (Chart.jsの仕様)
+            let chartStatus = Chart.getChart(canvasId); 
+            if (chartStatus != undefined) {
+                chartStatus.destroy();
+            }
+
+            // 日付ラベルは簡易的に 1日目, 2日目... とする
+            const labels = data.map((_, i) => `Day ${i+1}`);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: '#444' } },
+                        x: { grid: { color: '#444' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    }
+                }
+            });
+        }
+
+        // モーダル操作
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // 産業技術開発
+        function openIndustryModal() {
+            if(!currentData) return;
+            document.getElementById('ind-current').innerText = currentData.action.indCurrent;
+            document.getElementById('ind-total').innerText = currentData.action.indTotal;
+            document.getElementById('ind-level').innerText = currentData.action.indLevel;
+            document.getElementById('modal-industry').style.display = 'flex';
+        }
+
+        // 軍事技術開発
+        function openMilitaryModal() {
+            if(!currentData) return;
+            document.getElementById('mil-current').innerText = currentData.action.milCurrent;
+            document.getElementById('mil-total').innerText = currentData.action.milTotal;
+            document.getElementById('mil-level').innerText = currentData.action.milLevel;
+            document.getElementById('modal-military').style.display = 'flex';
+        }
+
+        // 軍拡予定
+        function openExpansionModal() {
+            if(!currentData) return;
+            document.getElementById('mil-pool').innerText = currentData.action.milPool; // 右
+            document.getElementById('mil-speed').innerText = currentData.action.milSpeed; // 左
+            document.getElementById('mil-amount').innerText = currentData.action.milAmount;
+            document.getElementById('mil-suff').innerText = currentData.action.milSufficiency;
+            document.getElementById('mil-deployed').innerText = currentData.action.milDeployed;
+            document.getElementById('modal-expansion').style.display = 'flex';
+        }
+
+        // 投資アクション実行
+        function submitInvestment(type) {
+            const inputId = type === 'industry' ? 'ind-input' : 'mil-input';
+            const val = document.getElementById(inputId).value;
+            if (val === "") return;
+            
+            sendAction(type === 'industry' ? 'updateIndustry' : 'updateMilitary', { amount: val });
+            closeModal(type === 'industry' ? 'modal-industry' : 'modal-military');
+        }
+
+        // 投資取り消し
+        function cancelInvestment(type) {
+            sendAction(type === 'industry' ? 'updateIndustry' : 'updateMilitary', { amount: 0 });
+            closeModal(type === 'industry' ? 'modal-industry' : 'modal-military');
+        }
+
+        // 国家総動員
+        function confirmMobilization() {
+            if (confirm("【警告】国家総動員を発令しますか？\nこれを行うと後戻りできません。")) {
+                sendAction('mobilize', {});
+            }
+        }
+
+        // GASへデータ送信共通処理
+        function sendAction(actionType, extraData) {
+            const payload = { ...extraData, action: actionType, country: loginCountry };
+            
+            // ローディング表示などの代わりに簡易的にalert等は出さないが、処理中は非同期
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === 'success') {
+                    alert('処理が完了しました。');
+                    fetchData(); // 画面更新
+                } else {
+                    alert('エラー: ' + response.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
