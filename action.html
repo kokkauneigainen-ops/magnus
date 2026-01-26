@@ -32,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* オーバーレイで背景を暗くする */
         body::before {
             content: "";
             position: fixed;
@@ -108,7 +107,6 @@
             margin-bottom: 10px;
         }
 
-        /* インフレ表示 */
         #inflation-display {
             font-size: 2.5rem;
             font-weight: bold;
@@ -116,7 +114,6 @@
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* ボタン群 */
         .action-btn {
             display: block;
             width: 100%;
@@ -137,7 +134,6 @@
             transform: scale(0.98);
         }
 
-        /* 国家総動員ボタン（重厚） */
         #btn-mobilize {
             background: linear-gradient(180deg, #5d0000, #2a0000);
             border: 3px double #ff4444;
@@ -157,7 +153,6 @@
             cursor: not-allowed;
         }
 
-        /* モーダル */
         .modal {
             display: none;
             position: fixed;
@@ -223,6 +218,7 @@
             color: white;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: bold;
         }
         
         .btn-cancel {
@@ -252,11 +248,26 @@
             background: #333;
         }
 
-        /* グラフコンテナ */
         .chart-container {
             position: relative;
             height: 200px;
             width: 100%;
+        }
+
+        /* 軍拡プール調整用の特別スタイル */
+        .pool-control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .pool-control-group input {
+            margin: 0;
+            flex: 1;
+        }
+        .pool-control-group button {
+            flex: 0 0 80px;
+            margin: 0;
         }
     </style>
 </head>
@@ -334,6 +345,13 @@
             <span>軍拡速度:</span> <span id="exp-speed">0</span>
         </div>
 
+        <hr style="border-color: #444; margin: 15px 0;">
+        <label style="display:block; margin-bottom:5px; font-size:0.9rem;">プール調整 (-100 ～ 100)</label>
+        <div class="pool-control-group">
+            <input type="number" id="pool-input" min="-100" max="100" placeholder="0">
+            <button class="btn-confirm" onclick="updatePool()">増減</button>
+        </div>
+
         <table class="status-table">
             <thead>
                 <tr>
@@ -354,8 +372,8 @@
 </div>
 
 <script>
-    // ▼ ここにデプロイしたGASのウェブアプリURLを貼ってください ▼
-    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwJK5f9es7eQx85Ek72-FTiJ9K-aSMWATCDZhpDOTKFJO3BKnjAfeFNGoD2nH8gzY17Pg/exec';
+
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwxf9d5XEVHbb7Pa24CspxjhRE5nVQHRbLZ0CMyWLkgNuW3jh3eLdadiLpvgm9fBS-8iA/exec';
     
     // セッション情報の確認
     const country = sessionStorage.getItem('loginCountry');
@@ -364,11 +382,9 @@
     }
     document.getElementById('country-name').textContent = country;
 
-    // グローバル変数でデータを保持
     let currentData = null;
-    let currentModalType = ''; // 'industrial' or 'military'
+    let currentModalType = ''; 
 
-    // 初期ロード
     window.onload = loadData;
 
     async function loadData() {
@@ -390,32 +406,23 @@
     }
 
     function renderPage(data) {
-        // 1. インフレ表示
         const infl = Number(data.inflation);
         const inflEl = document.getElementById('inflation-display');
         inflEl.textContent = infl;
 
-        // 色計算 (-100:青 -> 0:緑 -> 100:赤)
         let color = 'white';
         if (infl >= 0) {
-            // 緑(0) -> 赤(100)
             const ratio = Math.min(infl / 100, 1);
-            // 緑: rgb(76, 175, 80), 赤: rgb(244, 67, 54)
-            // シンプルにRGB補間で計算
             color = `rgb(${76 + (244-76)*ratio}, ${175 + (67-175)*ratio}, ${80 + (54-80)*ratio})`;
         } else {
-            // 緑(0) -> 青(-100)
             const ratio = Math.min(Math.abs(infl) / 100, 1);
-            // 青: rgb(33, 150, 243)
             color = `rgb(${76 + (33-76)*ratio}, ${175 + (150-175)*ratio}, ${80 + (243-80)*ratio})`;
         }
         inflEl.style.color = color;
 
-        // 2. グラフ描画
         drawChart('chart-inflation', 'インフレ推移', data.history_inflation, 'rgba(255, 99, 132, 1)');
         drawChart('chart-economy', '経済力', data.history_economy, 'rgba(54, 162, 235, 1)');
 
-        // 3. 総動員ボタンの状態
         const mobBtn = document.getElementById('btn-mobilize');
         if (data.action.mobilized == 1) {
             mobBtn.disabled = true;
@@ -426,10 +433,8 @@
 
     function drawChart(canvasId, label, dataArray, color) {
         const ctx = document.getElementById(canvasId).getContext('2d');
-        // 日付ラベルは単純に1日目, 2日目...とするか、配列長から生成
         const labels = dataArray.map((_, i) => `Day ${i+1}`);
         
-        // 既存チャートがあれば破棄（再描画時）
         if (window[canvasId] instanceof Chart) {
             window[canvasId].destroy();
         }
@@ -464,8 +469,6 @@
         });
     }
 
-    // --- モーダル操作 ---
-
     function openModal(type) {
         const d = currentData.action;
         if (!d) return;
@@ -487,6 +490,9 @@
             document.getElementById('tech-input').value = '';
             document.getElementById('tech-modal').style.display = 'flex';
         } else if (type === 'expansion') {
+            // 軍拡モーダルを開くたびに入力欄をクリア
+            document.getElementById('pool-input').value = '';
+            
             document.getElementById('exp-pool').innerText = d.pool;
             document.getElementById('exp-speed').innerText = d.speed;
             document.getElementById('exp-amount').innerText = d.mil_amount;
@@ -499,8 +505,6 @@
     function closeModal(id) {
         document.getElementById(id).style.display = 'none';
     }
-
-    // --- 送信処理 ---
 
     function submitTechInvestment() {
         const val = parseInt(document.getElementById('tech-input').value);
@@ -526,8 +530,27 @@
         }
     }
 
-    // データの送信（CORS回避のため text/plain で送るのがGAS定石の一つだが、fetchでno-corsだとレスポンス読めない。
-    // 今回はCORSヘッダ付きのレスポンスをGAS側で返す構成にしている前提。）
+    // 軍拡プールの更新処理
+    function updatePool() {
+        const inputEl = document.getElementById('pool-input');
+        const val = parseInt(inputEl.value);
+
+        if (isNaN(val)) {
+            alert('数値を入力してください');
+            return;
+        }
+        if (val < -100 || val > 100) {
+            alert('-100から100の範囲で入力してください');
+            return;
+        }
+        
+        if (val === 0) return;
+
+        // update_pool タイプで送信
+        sendPost('update_pool', val);
+        inputEl.value = '';
+    }
+
     async function sendPost(type, value) {
         const payload = {
             country: country,
@@ -536,30 +559,25 @@
         };
 
         try {
-            // sendBeaconではなくfetchを使う
+            // ローディング的なフィードバックがあると良いが、今回はシンプルに
             const response = await fetch(GAS_API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload)
-                // ヘッダーを指定するとOPTIONSプリフライトが飛びCORSエラーになりやすいので
-                // GAS側で text/plain として受け取るよう実装済み (e.postData.contents)
             });
             
             const res = await response.json();
             if (res.success) {
-                // 成功したらデータを再読み込みして画面更新
+                // データ再読み込み
                 loadData();
             } else {
                 alert('エラー: ' + res.message);
             }
         } catch (e) {
             console.error(e);
-            // GASの仕様上、リダイレクト周りでエラーに見えることがあるが処理されている場合も多い
-            // ここでは簡易的にリロード
             setTimeout(loadData, 1000); 
         }
     }
     
-    // モーダル外クリックで閉じる
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.style.display = "none";
